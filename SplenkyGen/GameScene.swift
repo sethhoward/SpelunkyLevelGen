@@ -9,9 +9,13 @@
 import SpriteKit
 import GameplayKit
 
-fileprivate let levelGridSize = CGSize(rows: 4, cols: 4)
+fileprivate let levelGridSize: (x: Int, y: Int) = (4, 4)
 private let spriteSize = CGSize(width: 32, height: 32)
-fileprivate let roomGridSize: (rows: Int, cols: Int) = (rows: 8, cols: 10)
+fileprivate let roomGridSize: (x: Int, y: Int) = (10, 8)
+
+func dim<T>(_ count: Int, _ value: T) -> [T] {
+    return [T](repeating: value, count: count)
+}
 
 // MARK: - 
 
@@ -34,6 +38,19 @@ extension CGSize {
 class RoomCell {
     let background: SKSpriteNode
     
+//    var indexPosition: (x: Int, y: Int)! {
+//        didSet {
+//            gridLocation = (x: indexPosition.x, y: indexPosition.y)
+//
+//        }
+//    }
+    
+    var gridLocation: (x: Int, y: Int) = (0, 0) {
+        didSet {
+            position = CGPoint(x: (CGFloat(gridLocation.x) * spriteSize.width), y: ((CGFloat(roomGridSize.x) - 1 - CGFloat(gridLocation.y)) * spriteSize.height))
+        }
+    }
+    
     var position: CGPoint {
         get {
             return background.position
@@ -52,21 +69,26 @@ class RoomCell {
         }
     }
     
-    init(index: (x: Int, y: Int), size: CGSize) {
-        background = SKSpriteNode(color: .clear, size: size)
-       // background.colorBlendFactor = 1
-        // The positions should be static
-        // CGPoint(x: CGFloat(rows) * self.spriteSize.width, y: CGFloat(cols) * self.spriteSize.height)
-        
-        position = CGPoint(x: (CGFloat(index.x) * spriteSize.width), y: ((CGFloat(roomGridSize.rows) - 1 - CGFloat(index.y)) * spriteSize.height))
-        print("\(position)")
-      //  self.position = CGPoint(x: position.x, y: position.y)
+    init() {
+        background = SKSpriteNode(color: .clear, size: spriteSize)
         background.anchorPoint = CGPoint(x: 0, y: 0)
     }
+    
+//    init(index: (x: Int, y: Int), size: CGSize) {
+//        background = SKSpriteNode(color: .clear, size: size)
+//       // background.colorBlendFactor = 1
+//        // The positions should be static
+//        // CGPoint(x: CGFloat(rows) * self.spriteSize.width, y: CGFloat(cols) * self.spriteSize.height)
+//
+//        position = CGPoint(x: (CGFloat(index.x) * spriteSize.width), y: ((CGFloat(roomGridSize.x) - 1 - CGFloat(index.y)) * spriteSize.height))
+//        print("\(position)")
+//      //  self.position = CGPoint(x: position.x, y: position.y)
+//        background.anchorPoint = CGPoint(x: 0, y: 0)
+//    }
 }
 
 var rgb: (CGFloat, CGFloat, CGFloat) = (0.0, 0.0, 0.0)
-var count = -1
+var count = -2
 func randomRPG() -> SKColor {
     if rgb.0 >= 254 {
         rgb.0 = 0
@@ -79,9 +101,7 @@ func randomRPG() -> SKColor {
     }
     
     switch count {
-    case -1:
-        rgb.0 += 3.1875
-    case 0:
+    case -2, -1, 0:
         rgb.0 += 3.1875
     case 1:
         rgb.1 += 3.1875
@@ -117,43 +137,55 @@ class Room: SKNode {
     var isStartRoom = false
     var isEndRoom = false
     var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
-    var gridLocation: (x: Int, y: Int)
+    var gridLocation: (x: Int, y: Int) = (0, 0)
     var roomType: RoomType = .unknown
     
     private lazy var roomLayoutNodes: [[RoomCell]] = {
-        rgb.0 = 0
-        rgb.1 = 0
-        rgb.2 = 0
-        var nodes = [[RoomCell]]()
-        for rows in 0..<roomGridSize.rows {
-            var row = [RoomCell]()
-            for cols in 0..<roomGridSize.cols {
+        var nodes = dim(roomGridSize.x, dim(roomGridSize.y, RoomCell()))
+        
+        for x in 0..<roomGridSize.x {
+            for y in 0..<roomGridSize.y {
                // let position = CGPoint(x: CGFloat(rows) * spriteSize.width, y: CGFloat(cols) * spriteSize.height)
-                let roomCell = RoomCell(index: (rows, cols), size: spriteSize)
-                roomCell.bgColor = randomRPG()
-                row.append(roomCell)
+                nodes[x][y] = RoomCell()
+                nodes[x][y].gridLocation = (x: x, y: y)
+                nodes[x][y].bgColor = randomRPG()
             }
-            nodes.append(row)
         }
         
         count += 1
         return nodes
     }()
     
-    init(indexX: Int, indexY: Int) {
-        gridLocation = (x: indexX, y: indexY)
-        
+    var indexPosition: (x: Int, y: Int)! {
+        didSet {
+            gridLocation = (x: indexPosition.x, y: indexPosition.y)
+            position = CGPoint(x: (CGFloat(roomGridSize.x) * spriteSize.width) * CGFloat(indexPosition.x), y: (CGFloat(roomGridSize.y) * spriteSize.height) * (3 - CGFloat(indexPosition.y)))
+        }
+    }
+    
+    override init() {
         super.init()
-        position = CGPoint(x: (CGFloat(roomGridSize.rows) * spriteSize.width) * CGFloat(indexX), y: (CGFloat(roomGridSize.rows) * spriteSize.height) * (3 - CGFloat(indexY)))
-        
-    //    (roomLayoutNodes.flatMap { $0 }).forEach { addChild($0.background) }
-        
         for cols in roomLayoutNodes {
             for node in cols {
                 addChild(node.background)
             }
         }
     }
+//
+//    init(indexX: Int, indexY: Int) {
+//
+//
+//        super.init()
+//        position = CGPoint(x: (CGFloat(roomGridSize.rows) * spriteSize.width) * CGFloat(indexX), y: (CGFloat(roomGridSize.rows) * spriteSize.height) * (3 - CGFloat(indexY)))
+//
+//    //    (roomLayoutNodes.flatMap { $0 }).forEach { addChild($0.background) }
+//
+//        for cols in roomLayoutNodes {
+//            for node in cols {
+//                addChild(node.background)
+//            }
+//        }
+//    }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -197,8 +229,8 @@ class Room: SKNode {
             }
         }()
         
-        for y in 0..<roomGridSize.cols {
-            for x in 0..<roomGridSize.rows {
+        for y in 0..<roomGridSize.y {
+            for x in 0..<roomGridSize.x {
                 let char = template.characters.popFirst()!
                 print("\(char) \(x) \(y) \(roomLayoutNodes[x][y].position)")
                 switch char {
@@ -358,18 +390,27 @@ struct RoomPath {
 // scene consists of 4 x 4 grid of rooms
 class GameScene: SKScene {
     private lazy var rooms: [[Room]] = {
-        var rooms = [[Room]]()
-        for rows in 0..<levelGridSize.rows {
-            var row = [Room]()
-            for cols in 0..<levelGridSize.cols {
-                let room = Room(indexX: rows, indexY: cols)
-                row.append(room)
+        var rooms = dim(levelGridSize.x, dim(levelGridSize.y, Room()))
+        
+        for y in 0..<levelGridSize.y {
+            for x in 0..<levelGridSize.x {
+                rooms[x][y] = Room()
+                rooms[x][y].indexPosition = (x, y)
             }
-            rooms.append(row)
         }
         
-        var roomPath = RoomPath(rooms: rooms)
-        roomPath.generatePath()
+//        var rooms = [[Room]]()
+//        for rows in 0..<levelGridSize.rows {
+//            var row = [Room]()
+//            for cols in 0..<levelGridSize.cols {
+//                let room = Room(indexX: rows, indexY: cols)
+//                row.append(room)
+//            }
+//            rooms.append(row)
+//        }
+        
+ //       var roomPath = RoomPath(rooms: rooms)
+       // roomPath.generatePath()
         
         // TODO: consider caching the actual room paths, rebuilding from the grid is a pain in the ass.
 //        for rows in 0..<levelGridSize.rows {
@@ -378,7 +419,7 @@ class GameScene: SKScene {
 //            }
 //        }
         
-        rooms[0][0].generateStartRoom()
+        rooms[1][0].generateStartRoom()
         
         return rooms
     }()
