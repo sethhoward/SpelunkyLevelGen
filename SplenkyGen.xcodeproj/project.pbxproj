@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C52C79FD1EEB5494008803CC /* sBlock.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C79FC1EEB5494008803CC /* sBlock.png */; };
+		C52C79FF1EEB54D2008803CC /* sCaveBG.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C79FE1EEB54D2008803CC /* sCaveBG.png */; };
+		C52C7A011EEB54E0008803CC /* sBrick.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C7A001EEB54E0008803CC /* sBrick.png */; };
+		C52C7A041EEB54FB008803CC /* Ladder.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C7A031EEB54FB008803CC /* Ladder.png */; };
+		C52C7A061EEB550E008803CC /* LadderTop.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C7A051EEB550E008803CC /* LadderTop.png */; };
 		C5FE871B1EE4A4C20054982C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FE871A1EE4A4C20054982C /* AppDelegate.swift */; };
 		C5FE87211EE4A4C20054982C /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FE87201EE4A4C20054982C /* GameScene.swift */; };
 		C5FE87231EE4A4C20054982C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FE87221EE4A4C20054982C /* ViewController.swift */; };
@@ -15,6 +20,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C52C79FC1EEB5494008803CC /* sBlock.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = sBlock.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Blocks/Mines/sBlock.images/sBlock.png"; sourceTree = "<group>"; };
+		C52C79FE1EEB54D2008803CC /* sCaveBG.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = sCaveBG.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Blocks/Background/sCaveBG.images/sCaveBG.png"; sourceTree = "<group>"; };
+		C52C7A001EEB54E0008803CC /* sBrick.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = sBrick.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Blocks/Mines/sBrick.images/sBrick.png"; sourceTree = "<group>"; };
+		C52C7A031EEB54FB008803CC /* Ladder.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Ladder.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Blocks/Ladders/sLadder.images/Ladder.png"; sourceTree = "<group>"; };
+		C52C7A051EEB550E008803CC /* LadderTop.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = LadderTop.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Blocks/Ladders/sLadderTop.images/LadderTop.png"; sourceTree = "<group>"; };
 		C5FE87171EE4A4C20054982C /* SplenkyGen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SplenkyGen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FE871A1EE4A4C20054982C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C5FE87201EE4A4C20054982C /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -35,6 +45,42 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C52C79F31EEB53F2008803CC /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				C52C7A021EEB54F1008803CC /* Ladders */,
+				C52C79F51EEB5402008803CC /* Background */,
+				C52C79F41EEB53FC008803CC /* Mines */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
+		C52C79F41EEB53FC008803CC /* Mines */ = {
+			isa = PBXGroup;
+			children = (
+				C52C7A001EEB54E0008803CC /* sBrick.png */,
+				C52C79FC1EEB5494008803CC /* sBlock.png */,
+			);
+			path = Mines;
+			sourceTree = "<group>";
+		};
+		C52C79F51EEB5402008803CC /* Background */ = {
+			isa = PBXGroup;
+			children = (
+				C52C79FE1EEB54D2008803CC /* sCaveBG.png */,
+			);
+			path = Background;
+			sourceTree = "<group>";
+		};
+		C52C7A021EEB54F1008803CC /* Ladders */ = {
+			isa = PBXGroup;
+			children = (
+				C52C7A031EEB54FB008803CC /* Ladder.png */,
+				C52C7A051EEB550E008803CC /* LadderTop.png */,
+			);
+			path = Ladders;
+			sourceTree = "<group>";
+		};
 		C5FE870E1EE4A4C20054982C = {
 			isa = PBXGroup;
 			children = (
@@ -54,6 +100,7 @@
 		C5FE87191EE4A4C20054982C /* SplenkyGen */ = {
 			isa = PBXGroup;
 			children = (
+				C52C79F31EEB53F2008803CC /* Assets */,
 				C5FE871A1EE4A4C20054982C /* AppDelegate.swift */,
 				C5FE87201EE4A4C20054982C /* GameScene.swift */,
 				C5FE87221EE4A4C20054982C /* ViewController.swift */,
@@ -124,7 +171,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				C5FE87251EE4A4C20054982C /* Assets.xcassets in Resources */,
+				C52C7A011EEB54E0008803CC /* sBrick.png in Resources */,
+				C52C79FF1EEB54D2008803CC /* sCaveBG.png in Resources */,
+				C52C7A061EEB550E008803CC /* LadderTop.png in Resources */,
 				C5FE87281EE4A4C20054982C /* Main.storyboard in Resources */,
+				C52C79FD1EEB5494008803CC /* sBlock.png in Resources */,
+				C52C7A041EEB54FB008803CC /* Ladder.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

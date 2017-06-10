@@ -9,6 +9,12 @@
 import SpriteKit
 import GameplayKit
 
+fileprivate let levelGridSize = CGSize(rows: 4, cols: 4)
+private let spriteSize = CGSize(width: 32, height: 32)
+fileprivate let roomGridSize: (rows: Int, cols: Int) = (rows: 8, cols: 10)
+
+// MARK: - 
+
 extension CGSize {
     public init(rows: Int, cols: Int) {
         self = CGSize(width: rows, height: cols)
@@ -22,6 +28,8 @@ extension CGSize {
         return Int(self.height)
     }
 }
+
+// MARK: -
 
 class RoomCell {
     let background: SKSpriteNode
@@ -44,11 +52,15 @@ class RoomCell {
         }
     }
     
-    init(position: CGPoint, size: CGSize) {
+    init(index: (x: Int, y: Int), size: CGSize) {
         background = SKSpriteNode(color: .clear, size: size)
-        background.colorBlendFactor = 1
+       // background.colorBlendFactor = 1
         // The positions should be static
-        self.position = position
+        // CGPoint(x: CGFloat(rows) * self.spriteSize.width, y: CGFloat(cols) * self.spriteSize.height)
+        
+        position = CGPoint(x: (CGFloat(index.x) * spriteSize.width), y: ((CGFloat(roomGridSize.rows) - 1 - CGFloat(index.y)) * spriteSize.height))
+        print("\(position)")
+      //  self.position = CGPoint(x: position.x, y: position.y)
         background.anchorPoint = CGPoint(x: 0, y: 0)
     }
 }
@@ -84,21 +96,40 @@ func randomRPG() -> SKColor {
     return SKColor(calibratedRed: rgb.0/255, green: rgb.1/255, blue: rgb.2/255, alpha: 1)
 }
 
+// MARK: -
+
+enum PathDirection {
+    case unknown
+    case left
+    case right
+    case down
+    case up
+}
+
+// TODO: check what the room types are... i think 2 is a passage and 3 is a down
+enum RoomType {
+    case unknown
+    case path
+}
+
 // 10 x 8 collection of sprites that make up a room
 class Room: SKNode {
-    private let screenSize = CGSize(rows: 8, cols: 10)
-    private let spriteSize = CGSize(width: 32, height: 32)
+    var isStartRoom = false
+    var isEndRoom = false
+    var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
+    var gridLocation: (x: Int, y: Int)
+    var roomType: RoomType = .unknown
     
     private lazy var roomLayoutNodes: [[RoomCell]] = {
         rgb.0 = 0
         rgb.1 = 0
         rgb.2 = 0
         var nodes = [[RoomCell]]()
-        for cols in 0...self.screenSize.cols {
+        for rows in 0..<roomGridSize.rows {
             var row = [RoomCell]()
-            for rows in 0...self.screenSize.rows {
-                let position = CGPoint(x: CGFloat(cols) * self.spriteSize.width, y: CGFloat(rows) * self.spriteSize.height)
-                let roomCell = RoomCell(position: position, size: self.spriteSize)
+            for cols in 0..<roomGridSize.cols {
+               // let position = CGPoint(x: CGFloat(rows) * spriteSize.width, y: CGFloat(cols) * spriteSize.height)
+                let roomCell = RoomCell(index: (rows, cols), size: spriteSize)
                 roomCell.bgColor = randomRPG()
                 row.append(roomCell)
             }
@@ -110,8 +141,13 @@ class Room: SKNode {
     }()
     
     init(indexX: Int, indexY: Int) {
+        gridLocation = (x: indexX, y: indexY)
+        
         super.init()
-        position = CGPoint(x: (CGFloat(screenSize.cols) * spriteSize.width) * CGFloat(indexX), y: (CGFloat(screenSize.rows) * spriteSize.height) * CGFloat(indexY))
+        position = CGPoint(x: (CGFloat(roomGridSize.rows) * spriteSize.width) * CGFloat(indexX), y: (CGFloat(roomGridSize.rows) * spriteSize.height) * (3 - CGFloat(indexY)))
+        
+    //    (roomLayoutNodes.flatMap { $0 }).forEach { addChild($0.background) }
+        
         for cols in roomLayoutNodes {
             for node in cols {
                 addChild(node.background)
@@ -122,34 +158,233 @@ class Room: SKNode {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    func generateStartRoom() {
+//        guard isStartRoom else {
+//            assert(false)
+//        }
+        
+        var template: String = {
+            var random: Int {
+                if pathDirection.contains(.left) || pathDirection.contains(.right) {
+                    return randomInt(min: 5, max: 8)
+                } else {
+                    return randomInt(min: 1, max: 4)
+                }
+            }
+            
+            return "11111111112222222222000000000000000000000008000000000000000000000000001111111111"
+            
+            switch random {
+            case 1:
+                return "60000600000000000000000000000000000000000008000000000000000000000000001111111111"
+            case 2:
+                return "11111111112222222222000000000000000000000008000000000000000000000000001111111111"
+            case 3:
+                return "00000000000008000000000000000000L000000000P111111000L111111000L00111111111111111"
+            case 4:
+                return "0000000000008000000000000000000000000L000111111P000111111L001111100L001111111111"
+            case 5:
+                return "60000600000000000000000000000000000000000008000000000000000000000000002021111120"
+            case 6:
+                return "11111111112222222222000000000000000000000008000000000000000000000000002021111120"
+            case 7:
+                return "00000000000008000000000000000000L000000000P111111000L111111000L00011111111101111"
+            case 8:
+                return "0000000000008000000000000000000000000L000111111P000111111L001111000L001111011111"
+            default:
+                assert(false)
+            }
+        }()
+        
+        for y in 0..<roomGridSize.cols {
+            for x in 0..<roomGridSize.rows {
+                let char = template.characters.popFirst()!
+                print("\(char) \(x) \(y) \(roomLayoutNodes[x][y].position)")
+                switch char {
+                case "1":
+                    roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sBrick.png")
+                case "L":
+                    roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Ladder.png")
+                case "P":
+                    roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "LadderTop.png")
+                default:
+                    roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
+                }
+                
+                
+            }
+        }
+    }
+}
+
+extension Array where Element == [Room] {
+    func neighbor(of room: Room, thatIs pathDirection: PathDirection) -> Room? {
+        switch pathDirection {
+        case .left:
+            let index: (x: Int, y: Int) = (room.gridLocation.x - 1, room.gridLocation.y)
+            if index.x >= 0 {
+                return self[index.x][index.y]
+            }
+        case .right:
+            let index: (x: Int, y: Int) = (room.gridLocation.x + 1, room.gridLocation.y)
+            if index.x < self.count {
+                return self[index.x][index.y]
+            }
+        case .down:
+            let index: (x: Int, y: Int) = (room.gridLocation.x, room.gridLocation.y + 1)
+            if index.y < self[0].count {
+                return self[index.x][index.y]
+            }
+        default: ()
+        }
+        
+        return nil
+    }
+}
+
+private func randomInt(min: Int, max:Int) -> Int {
+    return min + Int(arc4random_uniform(UInt32(max - min + 1)))
+}
+
+// MARK: -
+
+/*
+ 0 - side roome
+ 1 - left and right
+ 2- left right and bottom
+ 3 - left right top
+ 
+ */
+
+// maybe make this a class?
+struct RoomPath {
+    var rooms: [[Room]]
+    
+    mutating func generatePath() {
+        let startRoom: Room = {
+            let randomX = randomInt(min: 0, max: 3)
+            let room = rooms[randomX][0]
+            room.isStartRoom = true
+            room.roomType = .path
+            rooms[randomX][0] = room
+           return room
+        }()
+       // var previousRoom = startRoom
+        var currentRoom = startRoom
+        var running = true
+        
+        while running {
+            var randomNumber: Int {
+                switch currentRoom.gridLocation.x {
+                case 0:
+                    return randomInt(min: 3, max: 5) // right
+                case 3:
+                    return randomInt(min: 5, max: 7) // left
+                default:
+                    return randomInt(min: 1, max: 5)
+                }
+            }
+            
+            func createLeftPath() -> Bool {
+                guard let leftRoom = rooms.neighbor(of: currentRoom, thatIs: .left), leftRoom.roomType == .unknown else { return false }
+                
+                leftRoom.pathDirection = [.left, .right]
+                leftRoom.roomType = .path
+                currentRoom = leftRoom
+                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
+                
+                return true
+            }
+            
+            func createRightPath() -> Bool {
+                guard let rightRoom = rooms.neighbor(of: currentRoom, thatIs: .right), rightRoom.roomType == .unknown else { return false }
+                
+                rightRoom.pathDirection = [.right, .left]
+                rightRoom.roomType = .path
+                currentRoom = rightRoom
+                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
+                    
+                return true
+            }
+            
+            func createDownPath() -> Bool {
+                guard let downRoom = rooms.neighbor(of: currentRoom, thatIs: .down) else {
+                    currentRoom.roomType = .path
+                    currentRoom.isEndRoom = true
+                    rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
+                    
+                    return false
+                }
+                
+                currentRoom.pathDirection = [.left, .right, .down]
+                currentRoom.roomType = .path
+                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
+                downRoom.pathDirection = [.left, .right, .up]
+                downRoom.roomType = .path
+                currentRoom = downRoom
+                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
+                
+                return true
+            }
+            
+            // Path generation
+            switch randomNumber {
+            case 0..<3, 6, 7:
+                if !createLeftPath() {
+                    if !createRightPath() {
+                        if !createDownPath() {
+                            running = false
+                        }
+                    }
+                }
+            case 3, 4:
+                if !createRightPath() {
+                    if !createLeftPath() {
+                        if !createDownPath() {
+                            running = false
+                        }
+                    }
+                }
+            default:
+                if !createDownPath() {
+                    running = false
+                }
+            }
+        }
+    }
 }
 
 // scene consists of 4 x 4 grid of rooms
 class GameScene: SKScene {
-    private let gridSize = CGSize(rows: 4, cols: 4)
-    
     private lazy var rooms: [[Room]] = {
         var rooms = [[Room]]()
-        for rows in 0...self.gridSize.rows {
-            var col = [Room]()
-            for cols in 0...self.gridSize.cols {
-                let room = Room(indexX: cols, indexY: rows)
-                col.append(room)
+        for rows in 0..<levelGridSize.rows {
+            var row = [Room]()
+            for cols in 0..<levelGridSize.cols {
+                let room = Room(indexX: rows, indexY: cols)
+                row.append(room)
             }
-            rooms.append(col)
+            rooms.append(row)
         }
+        
+        var roomPath = RoomPath(rooms: rooms)
+        roomPath.generatePath()
+        
+        // TODO: consider caching the actual room paths, rebuilding from the grid is a pain in the ass.
+//        for rows in 0..<levelGridSize.rows {
+//            for cols in 0..<levelGridSize.cols {
+//                print("\(rooms[rows][cols].gridLocation), \(rooms[rows][cols].roomType), \(rooms[rows][cols].pathDirection) start:\(rooms[rows][cols].isStartRoom), end: \(rooms[rows][cols].isEndRoom)")
+//            }
+//        }
+        
+        rooms[0][0].generateStartRoom()
         
         return rooms
     }()
     
     override func didMove(to view: SKView) {
-        //(rooms.flatMap { $0 }).forEach { addChild($0) }
-        for cols in 0...gridSize.cols {
-            for rows in 0...gridSize.rows {
-                addChild(rooms[cols][rows])
-            }
-        }
-        
+        (rooms.flatMap { $0 }).forEach { addChild($0) }
     }
     
     
