@@ -15,8 +15,95 @@ enum PathDirection {
     case unknown
     case left
     case right
-    case down
+    case drop
     case up
+}
+
+typealias RoomTemplate = String
+
+fileprivate extension RoomTemplate {
+    func placeObstacle() -> RoomTemplate {
+        let start: Character = "8"
+        let ground: Character = "5"
+        let air: Character = "6"
+        
+        var template = self // returned value
+        var tempString = self // observed
+        for i in 0..<self.count {
+            var strObs1 = "00000"
+            var strObs2 = "00000"
+            var strObs3 = "00000"
+            let tile = tempString.characters.popFirst()!
+            
+            if tile == start {
+                switch randomInt(min: 1, max: 8) {
+                case 1:  strObs1 = "00900"; strObs2 = "01110"; strObs3 = "11111"
+                case 2:  strObs1 = "00900"; strObs2 = "02120"; strObs3 = "02120"
+                case 3:  strObs1 = "00000"; strObs2 = "00000"; strObs3 = "92222"
+                case 4:  strObs1 = "00000"; strObs2 = "00000"; strObs3 = "22229"
+                case 5:  strObs1 = "00000"; strObs2 = "11001"; strObs3 = "19001"
+                case 6:  strObs1 = "00000"; strObs2 = "10011"; strObs3 = "10091"
+                case 7:  strObs1 = "11111"; strObs2 = "10001"; strObs3 = "40094"
+                case 8:  strObs1 = "00000"; strObs2 = "12021"; strObs3 = "12921"
+                default: assert(false)
+                }
+            }
+            else if tile == ground {
+                switch randomInt(min: 1, max: 16) {
+                case 1:  strObs1 = "11111"; strObs2 = "00000"; strObs3 = "00000"
+                case 2:  strObs1 = "00000"; strObs2 = "11110"; strObs3 = "00000"
+                case 3:  strObs1 = "00000"; strObs2 = "01111"; strObs3 = "00000"
+                case 4:  strObs1 = "00000"; strObs2 = "00000"; strObs3 = "11111"
+                case 5:  strObs1 = "00000"; strObs2 = "20200"; strObs3 = "17177"
+                case 6:  strObs1 = "00000"; strObs2 = "02020"; strObs3 = "71717"
+                case 7:  strObs1 = "00000"; strObs2 = "00202"; strObs3 = "77171"
+                case 8:  strObs1 = "00000"; strObs2 = "22200"; strObs3 = "11100"
+                case 9:  strObs1 = "00000"; strObs2 = "02220"; strObs3 = "01110"
+                case 10:  strObs1 = "00000"; strObs2 = "00222"; strObs3 = "00111"
+                case 11:  strObs1 = "11100"; strObs2 = "22200"; strObs3 = "00000"
+                case 12:  strObs1 = "01110"; strObs2 = "02220"; strObs3 = "00000"
+                case 13:  strObs1 = "00111"; strObs2 = "00222"; strObs3 = "00000"
+                case 14:  strObs1 = "00000"; strObs2 = "02220"; strObs3 = "21112"
+                case 15:  strObs1 = "00000"; strObs2 = "20100"; strObs3 = "77117"
+                case 16:  strObs1 = "00000"; strObs2 = "00102"; strObs3 = "71177"
+                default: assert(false)
+                }
+            }
+            else if tile == air {
+                switch randomInt(min: 1, max: 10) {
+                case 1:  strObs1 = "11111"; strObs2 = "00000"; strObs3 = "00000"
+                case 2:  strObs1 = "22222"; strObs2 = "00000"; strObs3 = "00000"
+                case 3:  strObs1 = "11100"; strObs2 = "22200"; strObs3 = "00000"
+                case 4:  strObs1 = "01110"; strObs2 = "02220"; strObs3 = "00000"
+                case 5:  strObs1 = "00111"; strObs2 = "00222"; strObs3 = "00000"
+                case 6:  strObs1 = "00000"; strObs2 = "01110"; strObs3 = "00000"
+                case 7:  strObs1 = "00000"; strObs2 = "01110"; strObs3 = "02220"
+                case 8:  strObs1 = "00000"; strObs2 = "02220"; strObs3 = "01110"
+                case 9:  strObs1 = "00000"; strObs2 = "00220"; strObs3 = "01111"
+                case 10:  strObs1 = "00000"; strObs2 = "22200"; strObs3 = "11100"
+                default: assert(false)
+                }
+            }
+            
+            var j = i
+            
+            if tile == start || tile == ground || tile == air {
+                func substituteObstacle(at offset: Int, with obstacleFragment: String) {
+                    let start = template.index(template.startIndex, offsetBy: j)
+                    let end = template.index(template.startIndex, offsetBy: j + 4)
+                    template.replaceSubrange(start...end, with: obstacleFragment)
+                }
+                
+                substituteObstacle(at: j, with: strObs1)
+                j += 10
+                substituteObstacle(at: j, with: strObs2)
+                j += 10
+                substituteObstacle(at: j, with: strObs3)
+            }
+        }
+        
+        return template
+    }
 }
 
 enum RoomType {
@@ -25,92 +112,11 @@ enum RoomType {
     case start
     case end
     
-    // TODO: make extension on string... also make string a typealias
-    private func placeObstacle(template: inout String) {
-        let start: Character = "8"
-        let ground: Character = "5"
-        let air: Character = "6"
-        
-        var tempString = template
-        for i in 0..<template.count {
-            var strObs1 = "00000"
-            var strObs2 = "00000"
-            var strObs3 = "00000"
-            let tile = tempString.characters.popFirst()!
-            
-            if tile == start {
-                switch randomInt(min: 1, max: 8) {
-                    case 1:  strObs1 = "00900"; strObs2 = "01110"; strObs3 = "11111";
-                    case 2:  strObs1 = "00900"; strObs2 = "02120"; strObs3 = "02120";
-                    case 3:  strObs1 = "00000"; strObs2 = "00000"; strObs3 = "92222";
-                    case 4:  strObs1 = "00000"; strObs2 = "00000"; strObs3 = "22229";
-                    case 5:  strObs1 = "00000"; strObs2 = "11001"; strObs3 = "19001";
-                    case 6:  strObs1 = "00000"; strObs2 = "10011"; strObs3 = "10091";
-                    case 7:  strObs1 = "11111"; strObs2 = "10001"; strObs3 = "40094";
-                    case 8:  strObs1 = "00000"; strObs2 = "12021"; strObs3 = "12921";
-                    default: assert(false)
-                }
-            }
-            else if tile == ground {
-                switch randomInt(min: 1, max: 16) {
-                    case 1:  strObs1 = "11111"; strObs2 = "00000"; strObs3 = "00000";
-                    case 2:  strObs1 = "00000"; strObs2 = "11110"; strObs3 = "00000";
-                    case 3:  strObs1 = "00000"; strObs2 = "01111"; strObs3 = "00000";
-                    case 4:  strObs1 = "00000"; strObs2 = "00000"; strObs3 = "11111";
-                    case 5:  strObs1 = "00000"; strObs2 = "20200"; strObs3 = "17177";
-                    case 6:  strObs1 = "00000"; strObs2 = "02020"; strObs3 = "71717";
-                    case 7:  strObs1 = "00000"; strObs2 = "00202"; strObs3 = "77171";
-                    case 8:  strObs1 = "00000"; strObs2 = "22200"; strObs3 = "11100";
-                    case 9:  strObs1 = "00000"; strObs2 = "02220"; strObs3 = "01110";
-                    case 10:  strObs1 = "00000"; strObs2 = "00222"; strObs3 = "00111";
-                    case 11:  strObs1 = "11100"; strObs2 = "22200"; strObs3 = "00000";
-                    case 12:  strObs1 = "01110"; strObs2 = "02220"; strObs3 = "00000";
-                    case 13:  strObs1 = "00111"; strObs2 = "00222"; strObs3 = "00000";
-                    case 14:  strObs1 = "00000"; strObs2 = "02220"; strObs3 = "21112";
-                    case 15:  strObs1 = "00000"; strObs2 = "20100"; strObs3 = "77117";
-                    case 16:  strObs1 = "00000"; strObs2 = "00102"; strObs3 = "71177";
-                    default: assert(false)
-                }
-            }
-            else if tile == air {
-                switch randomInt(min: 1, max: 10) {
-                case 1:  strObs1 = "11111"; strObs2 = "00000"; strObs3 = "00000";
-                case 2:  strObs1 = "22222"; strObs2 = "00000"; strObs3 = "00000";
-                case 3:  strObs1 = "11100"; strObs2 = "22200"; strObs3 = "00000";
-                case 4:  strObs1 = "01110"; strObs2 = "02220"; strObs3 = "00000";
-                case 5:  strObs1 = "00111"; strObs2 = "00222"; strObs3 = "00000";
-                case 6:  strObs1 = "00000"; strObs2 = "01110"; strObs3 = "00000";
-                case 7:  strObs1 = "00000"; strObs2 = "01110"; strObs3 = "02220";
-                case 8:  strObs1 = "00000"; strObs2 = "02220"; strObs3 = "01110";
-                case 9:  strObs1 = "00000"; strObs2 = "00220"; strObs3 = "01111";
-                case 10:  strObs1 = "00000"; strObs2 = "22200"; strObs3 = "11100";
-                default: assert(false)
-                }
-            }
-            
-            var j = i
-            if tile == "5" || tile == "6" || tile == "8" {
-                var start = template.index(template.startIndex, offsetBy: j)
-                var end = template.index(template.startIndex, offsetBy: j + 4)
-                template.replaceSubrange(start...end, with: strObs1)
-                j += 10;
-                
-                start = template.index(template.startIndex, offsetBy: j)
-                end = template.index(template.startIndex, offsetBy: j + 4)
-                template.replaceSubrange(start...end, with: strObs2)
-                
-                j += 10;
-                start = template.index(template.startIndex, offsetBy: j)
-                end = template.index(template.startIndex, offsetBy: j + 4)
-                template.replaceSubrange(start...end, with: strObs3)
-            }
-        }
-    }
-    
-    func template(paths: [PathDirection]) -> String? {
+    func template(room: Room) -> RoomTemplate? {
+        let paths = room.pathDirection
         switch self {
         case .start:
-            var template: String = {
+            var template: RoomTemplate {
                 var random: Int {
                     if paths.contains(.left) || paths.contains(.right) {
                         return randomInt(min: 5, max: 8)
@@ -119,36 +125,147 @@ enum RoomType {
                     }
                 }
                 
-                var returnString = ""//11111111112222222222000000000000000000000008000000000000000000000000001111111111"
-                
-               // return returnString
-                
                 switch random {
                 case 1:
-                    returnString = "60000600000000000000000000000000000000000008000000000000000000000000001111111111"
+                    return "60000600000000000000000000000000000000000008000000000000000000000000001111111111"
                 case 2:
-                    returnString =  "11111111112222222222000000000000000000000008000000000000000000000000001111111111"
+                    return "11111111112222222222000000000000000000000008000000000000000000000000001111111111"
                 case 3:
-                    returnString =  "00000000000008000000000000000000L000000000P111111000L111111000L00111111111111111"
+                    return "00000000000008000000000000000000L000000000P111111000L111111000L00111111111111111"
                 case 4:
-                    returnString =  "0000000000008000000000000000000000000L000111111P000111111L001111100L001111111111"
+                    return "0000000000008000000000000000000000000L000111111P000111111L001111100L001111111111"
                 case 5:
-                    returnString =  "60000600000000000000000000000000000000000008000000000000000000000000002021111120"
+                    return "60000600000000000000000000000000000000000008000000000000000000000000002021111120"
                 case 6:
-                    returnString =  "11111111112222222222000000000000000000000008000000000000000000000000002021111120"
+                    return "11111111112222222222000000000000000000000008000000000000000000000000002021111120"
                 case 7:
-                    returnString =  "00000000000008000000000000000000L000000000P111111000L111111000L00011111111101111"
+                    return "00000000000008000000000000000000L000000000P111111000L111111000L00011111111101111"
                 case 8:
-                    returnString =  "0000000000008000000000000000000000000L000111111P000111111L001111000L001111011111"
+                    return "0000000000008000000000000000000000000L000111111P000111111L001111000L001111011111"
                 default:
                     assert(false)
                 }
-                
-                placeObstacle(template: &returnString)
-                return returnString
-            }()
+            }
             
-            return template
+            return template.placeObstacle()
+        case .unknown:
+            var template: RoomTemplate {
+                var randome: Int {
+                    return randomInt(min: 1, max: 9)
+                }
+                
+                switch randome {
+                case 1: return "00000000000010111100000000000000011010000050000000000000000000000000001111111111"
+                // high walls
+                case 2: return "110000000040L600000011P000000011L000000011L5000000110000000011000000001111111111"
+                case 3: return "00000000110060000L040000000P110000000L110050000L11000000001100000000111111111111"
+                case 4: return "110000000040L600000011P000000011L000000011L0000000110000000011000000001112222111"
+                case 5: return "00000000110060000L040000000P110000000L110000000L11000000001100000000111112222111"
+                case 6: return "11111111110221111220002111120000022220000002222000002111120002211112201111111111"
+                case 7: return "11111111111112222111112000021111102201111120000211111022011111200002111112222111"
+                case 8: return "11111111110000000000110000001111222222111111111111112222221122000000221100000011"
+                case 9: return "121111112100L2112L0011P1111P1111L2112L1111L1111L1111L1221L1100L0000L001111221111"
+                // idols
+                case 10: return "22000000220000B0000000000000000000000000000000000000000000000000I000001111A01111"
+                // altars
+                case 11: return "220000002200000000000000000000000000000000000000000000x0000002211112201111111111"
+                default:
+                    assert(false)
+                }
+            }
+            
+            return template.placeObstacle()
+        case .path where !paths.contains(.up) || paths.contains(.drop): // left or right room
+            var template: RoomTemplate {
+                var random = 0
+                
+                if let t = tempGlobalRooms.neighbor(of: room, thatIs: .up), t.pathDirection.contains(.drop) {
+                    random = randomInt(min: 1, max: 12)
+                } else {
+                    random = randomInt(min: 1, max: 8)
+                }
+                
+                switch random {
+                // basic rooms
+                case 1: return "60000600000000000000000000000000000000000050000000000000000000000000001111111111"
+                case 2: return "60000600000000000000000000000000000000005000050000000000000000000000001111111111"
+                case 3: return "60000600000000000000000000000000050000000000000000000000000011111111111111111111"
+                case 4: return "60000600000000000000000600000000000000000000000000000222220000111111001111111111"
+                case 5: return "11111111112222222222000000000000000000000050000000000000000000000000001111111111"
+                case 6: return "11111111112111111112022222222000000000000050000000000000000000000000001111111111"
+                // low ceiling
+                case 7: return "11111111112111111112211111111221111111120111111110022222222000000000001111111111"
+                // ladders
+                case 8:
+                    if randomInt(min: 1, max: 2) == 1 {
+                        return "1111111111000000000L111111111P000000000L5000050000000000000000000000001111111111"
+                    } else {
+                        return "1111111111L000000000P111111111L0000000005000050000000000000000000000001111111111"
+                    }
+                case 9: return "000000000000L0000L0000P1111P0000L0000L0000P1111P0000L1111L0000L1111L001111111111"
+                // upper plats
+                case 10: return "00000000000111111110001111110000000000005000050000000000000000000000001111111111"
+                case 11: return "00000000000000000000000000000000000000000021111200021111112021111111121111111111"
+                // treasure below
+                case 12:
+                    if randomInt(min: 1, max: 2) == 1 {
+                        return "2222222222000000000000000000L001111111P001050000L011000000L010000000L01111111111"
+                    } else {
+                        return "222222222200000000000L000000000P111111100L500000100L000000110L000000011111111111"
+                    }
+                default:
+                    assert(false)
+                }
+            }
+                
+            return template.placeObstacle()
+        case .path where paths.contains(.up):
+            var template: RoomTemplate {
+                switch(randomInt(min: 1, max: 8)) {
+                    // basic rooms
+                    case 1: return "00000000000000000000000000000000000000000050000000000000000000000000001111111111"
+                    case 2: return "00000000000000000000000000000000000000005000050000000000000000000000001111111111"
+                    case 3: return "00000000000000000000000000000050000500000000000000000000000011111111111111111111"
+                    case 4: return "00000000000000000000000600000000000000000000000000000111110000111111001111111111"
+                    // upper plats
+                    case 5: return "00000000000111111110001111110000000000005000050000000000000000000000001111111111"
+                    case 6: return "00000000000000000000000000000000000000000021111200021111112021111111121111111111"
+                    case 7: return "10000000011112002111111200211100000000000022222000111111111111111111111111111111"
+                    // treasure below
+                    case 8:
+                        if (randomInt(min: 1, max: 2) == 1) {
+                            return "0000000000000000000000000000L001111111P001050000L011000000L010000000L01111111111"
+                        }
+                        else {
+                            return "000000000000000000000L000000000P111111100L500000100L000000110L000000011111111111"
+                        }
+                default:
+                    assert(false)
+                }
+            }
+            
+             return template.placeObstacle()
+        case .end:
+            var template: RoomTemplate {
+                var randomeNumber = 0
+                if (paths.contains(.up)) {
+                    randomeNumber = randomInt(min: 2, max: 4)
+                } else {
+                    randomeNumber = randomInt(min: 3, max: 6)
+                }
+                switch randomeNumber {
+                case 1: return "00000000006000060000000000000000000000000008000000000000000000000000001111111111"
+                case 2: return "00000000000000000000000000000000000000000008000000000000000000000000001111111111"
+                case 3: return "00000000000010021110001001111000110111129012000000111111111021111111201111111111"
+                case 4: return "00000000000111200100011110010021111011000000002109011111111102111111121111111111"
+                // no drop
+                case 5: return "60000600000000000000000000000000000000000008000000000000000000000000001111111111"
+                case 6: return "11111111112222222222000000000000000000000008000000000000000000000000001111111111"
+                default: assert(false)
+                }
+            }
+            
+            return template.placeObstacle()
         default:
             return nil
         }
@@ -208,7 +325,7 @@ class Room: SKNode {
         
         print("\(roomType)")
         
-        if let template = roomType.template(paths: pathDirection) {
+        if let template = roomType.template(room: self) {
             var template = template
             
             for y in 0..<roomGridSize.y {
@@ -233,15 +350,30 @@ class Room: SKNode {
                         } else {
                             roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
                         }
+                    case "4":
+                        if randomInt(min: 1, max: 4) == 1 {
+                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "PushBlock.png")
+                        } else {
+                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
+                        }
+                    case "7":
+                        if randomInt(min: 1, max: 3) == 1 {
+                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
+                        } else {
+                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Spikes.png")
+                        }
                     case "9":
                         if roomType == .start {
                             roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Entrance.png")
+                        } else {
+                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Exit.png")
                         }
                     case "L":
                         roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Ladder.png")
                     case "P":
                         roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "LadderTop.png")
                     default:()
+                        print("******** missing texture \(char)")
                         //  roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
                     }
                     
@@ -309,17 +441,18 @@ struct RoomPath {
     var rooms: [[Room]]
     
     mutating func generatePath() {
+        var path = [Room]()
         let startRoom: Room = {
             let randomX = randomInt(min: 0, max: 3)
-            let room = rooms[randomX][0]
+            let room = self.rooms[randomX][0]
             room.isStartRoom = true
-            room.roomType = .path
-            rooms[randomX][0] = room
+            room.roomType = .start
+            self.rooms[randomX][0] = room
             return room
         }()
         
-        var currentRoom = startRoom
-        currentRoom.roomType = .start
+        var currentRoom: Room = startRoom
+        path.append(startRoom)
         var running = true
         
         while running {
@@ -341,7 +474,7 @@ struct RoomPath {
                 leftRoom.roomType = .path
                 currentRoom = leftRoom
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                
+                path.append(currentRoom)
                 return true
             }
             
@@ -352,29 +485,30 @@ struct RoomPath {
                 rightRoom.roomType = .path
                 currentRoom = rightRoom
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                
+                path.append(currentRoom)
                 return true
             }
             
             func createDownPath() -> Bool {
-                guard let downRoom = rooms.neighbor(of: currentRoom, thatIs: .down) else {
+                guard let downRoom = rooms.neighbor(of: currentRoom, thatIs: .drop) else {
                     currentRoom.roomType = .end
                     currentRoom.isEndRoom = true
                     rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                    
+                    path.append(currentRoom)
                     return false
                 }
                 
-                currentRoom.pathDirection = [.left, .right, .down]
+                currentRoom.pathDirection = [.left, .right, .drop]
                 if currentRoom.roomType == .unknown {
                     currentRoom.roomType = .path
                 }
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
+                path.append(currentRoom)
                 downRoom.pathDirection = [.left, .right, .up]
                 downRoom.roomType = .path
                 currentRoom = downRoom
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                
+                path.append(currentRoom)
                 return true
             }
             
@@ -401,6 +535,10 @@ struct RoomPath {
                     running = false
                 }
             }
+        }
+        
+        for room in path {
+            print("d: \(room.pathDirection) l: \(room.gridLocation) s: \(room.isStartRoom) e: \(room.isEndRoom)")
         }
     }
 }

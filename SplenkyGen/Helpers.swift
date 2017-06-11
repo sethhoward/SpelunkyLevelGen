@@ -55,7 +55,7 @@ extension Array where Element == [Room] {
             if index.x < self.count {
                 return self[index.x][index.y]
             }
-        case .down:
+        case .drop:
             let index: (x: Int, y: Int) = (room.gridLocation.x, room.gridLocation.y + 1)
             if index.y < self[0].count {
                 return self[index.x][index.y]

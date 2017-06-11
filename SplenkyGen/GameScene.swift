@@ -12,6 +12,7 @@ import GameplayKit
 let levelGridSize: (x: Int, y: Int) = (4, 4)
 let spriteSize = CGSize(width: 32, height: 32)
 let roomGridSize: (x: Int, y: Int) = (10, 8)
+var tempGlobalRooms: [[Room]]!
 
 // scene consists of 4 x 4 grid of rooms
 class GameScene: SKScene {
@@ -24,6 +25,8 @@ class GameScene: SKScene {
                 rooms[x][y].indexPosition = (x, y)
             }
         }
+        
+        tempGlobalRooms = rooms
         
         var roomPath = RoomPath(rooms: rooms)
         roomPath.generatePath()
