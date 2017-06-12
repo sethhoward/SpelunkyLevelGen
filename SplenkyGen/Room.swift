@@ -22,20 +22,18 @@ enum PathDirection {
 typealias RoomTemplate = String
 
 fileprivate extension RoomTemplate {
-    func placeObstacle() -> RoomTemplate {
-        let start: Character = "8"
-        let ground: Character = "5"
-        let air: Character = "6"
+    private enum TileType: Int {
+        case start = 8
+        case ground = 5
+        case air = 6
         
-        var template = self // returned value
-        var tempString = self // observed
-        for i in 0..<self.count {
-            var strObs1 = "00000"
-            var strObs2 = "00000"
-            var strObs3 = "00000"
-            let tile = tempString.characters.popFirst()!
+        var obstacles: (obs1: String, obs2: String, obs3: String) {
+            var strObs1: String!
+            var strObs2: String!
+            var strObs3: String!
             
-            if tile == start {
+            switch self {
+            case .start:
                 switch randomInt(min: 1, max: 8) {
                 case 1:  strObs1 = "00900"; strObs2 = "01110"; strObs3 = "11111"
                 case 2:  strObs1 = "00900"; strObs2 = "02120"; strObs3 = "02120"
@@ -47,8 +45,7 @@ fileprivate extension RoomTemplate {
                 case 8:  strObs1 = "00000"; strObs2 = "12021"; strObs3 = "12921"
                 default: assert(false)
                 }
-            }
-            else if tile == ground {
+            case .ground:
                 switch randomInt(min: 1, max: 16) {
                 case 1:  strObs1 = "11111"; strObs2 = "00000"; strObs3 = "00000"
                 case 2:  strObs1 = "00000"; strObs2 = "11110"; strObs3 = "00000"
@@ -68,8 +65,7 @@ fileprivate extension RoomTemplate {
                 case 16:  strObs1 = "00000"; strObs2 = "00102"; strObs3 = "71177"
                 default: assert(false)
                 }
-            }
-            else if tile == air {
+            case .air:
                 switch randomInt(min: 1, max: 10) {
                 case 1:  strObs1 = "11111"; strObs2 = "00000"; strObs3 = "00000"
                 case 2:  strObs1 = "22222"; strObs2 = "00000"; strObs3 = "00000"
@@ -85,24 +81,34 @@ fileprivate extension RoomTemplate {
                 }
             }
             
-            var j = i
-            
-            if tile == start || tile == ground || tile == air {
-                func substituteObstacle(at offset: Int, with obstacleFragment: String) {
-                    let start = template.index(template.startIndex, offsetBy: j)
-                    let end = template.index(template.startIndex, offsetBy: j + 4)
-                    template.replaceSubrange(start...end, with: obstacleFragment)
-                }
-                
-                substituteObstacle(at: j, with: strObs1)
-                j += 10
-                substituteObstacle(at: j, with: strObs2)
-                j += 10
-                substituteObstacle(at: j, with: strObs3)
+            return (strObs1, strObs2, strObs3)
+        }
+    }
+    
+    mutating func placeObstacle() {
+        //var template = String(self)! // returned value
+        print("\(self)")
+        var tempString = String(self)! // observed
+        for i in 0..<self.count {
+            if let tileValue = Int(String(tempString.characters.popFirst()!)), let tile = TileType(rawValue: tileValue) {
+                    var j = i
+                    let obstacles = tile.obstacles
+                    
+                    func substituteObstacle(at offset: Int, with obstacleFragment: String) {
+                        let start = self.index(self.startIndex, offsetBy: j)
+                        let end = self.index(self.startIndex, offsetBy: j + 4)
+                        self.replaceSubrange(start...end, with: obstacleFragment)
+                    }
+                    
+                    substituteObstacle(at: j, with: obstacles.obs1)
+                    j += 10
+                    substituteObstacle(at: j, with: obstacles.obs2)
+                    j += 10
+                    substituteObstacle(at: j, with: obstacles.obs3)
             }
         }
         
-        return template
+       // return template
     }
 }
 
@@ -116,9 +122,9 @@ enum RoomType {
         let paths = room.pathDirection
         switch self {
         case .start:
-            var template: RoomTemplate {
+            var template: RoomTemplate = {
                 var random: Int {
-                    if paths.contains(.left) || paths.contains(.right) {
+                    if paths.contains(.drop) {
                         return randomInt(min: 5, max: 8)
                     } else {
                         return randomInt(min: 1, max: 4)
@@ -145,11 +151,12 @@ enum RoomType {
                 default:
                     assert(false)
                 }
-            }
+            }()
             
-            return template.placeObstacle()
+            template.placeObstacle()
+            return template
         case .unknown:
-            var template: RoomTemplate {
+            var template: RoomTemplate = {
                 var randome: Int {
                     return randomInt(min: 1, max: 9)
                 }
@@ -172,18 +179,13 @@ enum RoomType {
                 default:
                     assert(false)
                 }
-            }
+            }()
             
-            return template.placeObstacle()
-        case .path where !paths.contains(.up) || paths.contains(.drop): // left or right room
-            var template: RoomTemplate {
-                var random = 0
-                
-                if let t = tempGlobalRooms.neighbor(of: room, thatIs: .up), t.pathDirection.contains(.drop) {
-                    random = randomInt(min: 1, max: 12)
-                } else {
-                    random = randomInt(min: 1, max: 8)
-                }
+            template.placeObstacle()
+            return template
+        case .path where !paths.contains(.up) && !paths.contains(.drop): // left or right room
+            var template: RoomTemplate = {
+                let random = randomInt(min: 1, max: 12)
                 
                 switch random {
                 // basic rooms
@@ -216,11 +218,12 @@ enum RoomType {
                 default:
                     assert(false)
                 }
-            }
+            }()
                 
-            return template.placeObstacle()
-        case .path where paths.contains(.up):
-            var template: RoomTemplate {
+            template.placeObstacle()
+            return template
+        case .path where paths.contains(.up):   // has an up path
+            var template: RoomTemplate = {
                 switch(randomInt(min: 1, max: 8)) {
                     // basic rooms
                     case 1: return "00000000000000000000000000000000000000000050000000000000000000000000001111111111"
@@ -242,11 +245,41 @@ enum RoomType {
                 default:
                     assert(false)
                 }
-            }
+            }()
             
-             return template.placeObstacle()
+            template.placeObstacle()
+            return template
+        case .path where paths.contains(.drop):
+            var template: RoomTemplate = {
+                var random = 0
+                
+                if let t = tempGlobalRooms.neighbor(of: room, thatIs: .up), !t.pathDirection.contains(.drop) {
+                    random = randomInt(min: 1, max: 12)
+                } else {
+                    random = randomInt(min: 1, max: 8)
+                }
+                
+                switch random {
+                case 1: return "00000000006000060000000000000000000000006000060000000000000000000000000000000000"
+                case 2: return "00000000006000060000000000000000000000000000050000000000000000000000001202111111"
+                case 3: return "00000000006000060000000000000000000000050000000000000000000000000000001111112021"
+                case 4: return "00000000006000060000000000000000000000000000000000000000000002200002201112002111"
+                case 5: return "00000000000000220000000000000000200002000112002110011100111012000000211111001111"
+                case 6: return "00000000000060000000000000000000000000000000000000001112220002100000001110111111"
+                case 7: return "00000000000060000000000000000000000000000000000000002221110000000001201111110111"
+                case 8: return "00000000000060000000000000000000000000000000000000002022020000100001001111001111"
+                case 9: return "11111111112222222222000000000000000000000000000000000000000000000000001120000211"
+                case 10: return "11111111112222111111000002211100000002110000000000200000000000000000211120000211"
+                case 11: return "11111111111111112222111220000011200000000000000000000000000012000000001120000211"
+                case 12: return "11111111112111111112021111112000211112000002112000000022000002200002201111001111"
+                default: assert(false)
+                }
+            }()
+            
+            template.placeObstacle()
+            return template
         case .end:
-            var template: RoomTemplate {
+            var template: RoomTemplate = {
                 var randomeNumber = 0
                 if (paths.contains(.up)) {
                     randomeNumber = randomInt(min: 2, max: 4)
@@ -263,9 +296,10 @@ enum RoomType {
                 case 6: return "11111111112222222222000000000000000000000008000000000000000000000000001111111111"
                 default: assert(false)
                 }
-            }
+            }()
             
-            return template.placeObstacle()
+            template.placeObstacle()
+            return template
         default:
             return nil
         }
@@ -447,6 +481,7 @@ struct RoomPath {
             let room = self.rooms[randomX][0]
             room.isStartRoom = true
             room.roomType = .start
+            room.pathDirection = [.left, .right]
             self.rooms[randomX][0] = room
             return room
         }()
@@ -467,35 +502,30 @@ struct RoomPath {
                 }
             }
             
-            func createLeftPath() -> Bool {
-                guard let leftRoom = rooms.neighbor(of: currentRoom, thatIs: .left), leftRoom.roomType == .unknown else { return false }
+            var leftPath: Room? {
+                guard let leftRoom = rooms.neighbor(of: currentRoom, thatIs: .left), leftRoom.roomType == .unknown else { return nil }
                 
                 leftRoom.pathDirection = [.left, .right]
                 leftRoom.roomType = .path
-                currentRoom = leftRoom
-                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                path.append(currentRoom)
-                return true
+                return leftRoom
             }
             
-            func createRightPath() -> Bool {
-                guard let rightRoom = rooms.neighbor(of: currentRoom, thatIs: .right), rightRoom.roomType == .unknown else { return false }
+            var rightPath: Room? {
+                guard let rightRoom = rooms.neighbor(of: currentRoom, thatIs: .right), rightRoom.roomType == .unknown else { return nil }
                 
                 rightRoom.pathDirection = [.right, .left]
                 rightRoom.roomType = .path
-                currentRoom = rightRoom
-                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                path.append(currentRoom)
-                return true
+                return rightRoom
             }
             
-            func createDownPath() -> Bool {
+            // mutating
+            var downPath: Room? {
                 guard let downRoom = rooms.neighbor(of: currentRoom, thatIs: .drop) else {
                     currentRoom.roomType = .end
                     currentRoom.isEndRoom = true
                     rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                    path.append(currentRoom)
-                    return false
+                   // path.append(currentRoom)
+                    return nil
                 }
                 
                 currentRoom.pathDirection = [.left, .right, .drop]
@@ -503,42 +533,55 @@ struct RoomPath {
                     currentRoom.roomType = .path
                 }
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                path.append(currentRoom)
+                //path.append(currentRoom)
                 downRoom.pathDirection = [.left, .right, .up]
                 downRoom.roomType = .path
-                currentRoom = downRoom
+                return downRoom
+            }
+            
+            func append(room: Room) {
+                currentRoom = room
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
                 path.append(currentRoom)
-                return true
             }
             
             // Path generation
             switch randomNumber {
             case 0..<3, 6, 7:
-                if !createLeftPath() {
-                    if !createRightPath() {
-                        if !createDownPath() {
-                            running = false
-                        }
+                if let room = leftPath {
+                    append(room: room)
+                } else if let room = rightPath {
+                    append(room: room)
+                } else {
+                    if let room = downPath {
+                        append(room: room)
+                    } else {
+                        running = false
                     }
                 }
             case 3, 4:
-                if !createRightPath() {
-                    if !createLeftPath() {
-                        if !createDownPath() {
-                            running = false
-                        }
+                if let room = rightPath {
+                    append(room: room)
+                } else if let room = leftPath {
+                    append(room: room)
+                } else {
+                    if let room = downPath {
+                        append(room: room)
+                    } else {
+                        running = false
                     }
                 }
-            default:
-                if !createDownPath() {
+            default: // 5
+                if let room = downPath {
+                    append(room: room)
+                } else {
                     running = false
                 }
             }
         }
         
         for room in path {
-            print("d: \(room.pathDirection) l: \(room.gridLocation) s: \(room.isStartRoom) e: \(room.isEndRoom)")
+            print("l: \(room.gridLocation) d: \(room.pathDirection) t: \(room.roomType)")
         }
     }
 }
