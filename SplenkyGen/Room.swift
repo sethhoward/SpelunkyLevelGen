@@ -113,10 +113,13 @@ fileprivate extension RoomTemplate {
 }
 
 enum RoomType {
-    case unknown
+    case sideRoom
     case path // also known as 'main room'
     case start
     case end
+    case pitTop
+    case pitMiddle
+    case pitBottom
     
     func template(room: Room) -> RoomTemplate? {
         let paths = room.pathDirection
@@ -155,7 +158,7 @@ enum RoomType {
             
             template.placeObstacle()
             return template
-        case .unknown:
+        case .sideRoom:
             var template: RoomTemplate = {
                 var randome: Int {
                     return randomInt(min: 1, max: 9)
@@ -249,14 +252,16 @@ enum RoomType {
             
             template.placeObstacle()
             return template
-        case .path where paths.contains(.drop):
+        case .path where paths.contains(.drop), .pitTop:
             var template: RoomTemplate = {
-                var random = 0
-                
-                if let t = tempGlobalRooms.neighbor(of: room, thatIs: .up), !t.pathDirection.contains(.drop) {
-                    random = randomInt(min: 1, max: 12)
-                } else {
-                    random = randomInt(min: 1, max: 8)
+                var random: Int {
+                    if self == .pitTop {
+                        return randomInt(min: 4, max: 12)
+                    } else if let t = tempGlobalRooms.neighbor(of: room, thatIs: .up), !t.pathDirection.contains(.drop) {
+                        return randomInt(min: 1, max: 12)
+                    }
+                    
+                    return randomInt(min: 1, max: 8)
                 }
                 
                 switch random {
@@ -278,6 +283,10 @@ enum RoomType {
             
             template.placeObstacle()
             return template
+        case .pitMiddle:
+            return "111000011111s0000s11111200211111s0000s11111200211111s0000s11111200211111s0000s11"
+        case .pitBottom:
+            return "111000011111s0000s1111100001111100S0001111S0110S11111STTS1111111M111111111111111"
         case .end:
             var template: RoomTemplate = {
                 var randomeNumber = 0
@@ -314,7 +323,7 @@ class Room: SKNode {
     var isEndRoom = false
     var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
     var gridLocation: (x: Int, y: Int) = (0, 0)
-    var roomType: RoomType = .unknown
+    var roomType: RoomType = .sideRoom
     
     private lazy var roomLayoutNodes: [[RoomCell]] = {
         var nodes = dim(roomGridSize.x, dim(roomGridSize.y, RoomCell()))
@@ -503,7 +512,7 @@ struct RoomPath {
             }
             
             var leftPath: Room? {
-                guard let leftRoom = rooms.neighbor(of: currentRoom, thatIs: .left), leftRoom.roomType == .unknown else { return nil }
+                guard let leftRoom = rooms.neighbor(of: currentRoom, thatIs: .left), leftRoom.roomType == .sideRoom else { return nil }
                 
                 leftRoom.pathDirection = [.left, .right]
                 leftRoom.roomType = .path
@@ -511,7 +520,7 @@ struct RoomPath {
             }
             
             var rightPath: Room? {
-                guard let rightRoom = rooms.neighbor(of: currentRoom, thatIs: .right), rightRoom.roomType == .unknown else { return nil }
+                guard let rightRoom = rooms.neighbor(of: currentRoom, thatIs: .right), rightRoom.roomType == .sideRoom else { return nil }
                 
                 rightRoom.pathDirection = [.right, .left]
                 rightRoom.roomType = .path
@@ -529,7 +538,7 @@ struct RoomPath {
                 }
                 
                 currentRoom.pathDirection = [.left, .right, .drop]
-                if currentRoom.roomType == .unknown {
+                if currentRoom.roomType == .sideRoom {
                     currentRoom.roomType = .path
                 }
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom

@@ -14,9 +14,16 @@ let spriteSize = CGSize(width: 32, height: 32)
 let roomGridSize: (x: Int, y: Int) = (10, 8)
 var tempGlobalRooms: [[Room]]!
 
-// scene consists of 4 x 4 grid of rooms
-class GameScene: SKScene {
-    private lazy var rooms: [[Room]] = {
+class Level {
+    enum LevelType {
+        case mines
+        case jungle
+        case ice
+        case temple
+    }
+    
+    var levelType = LevelType.mines
+    lazy var rooms: [[Room]] = {
         var rooms = dim(levelGridSize.x, dim(levelGridSize.y, Room()))
         
         for y in 0..<levelGridSize.y {
@@ -31,26 +38,37 @@ class GameScene: SKScene {
         var roomPath = RoomPath(rooms: rooms)
         roomPath.generatePath()
         
+        // check for pit
+        if self.levelType == .mines {
+            for y in 0..<2 {
+                for x in 0..<4 {
+                    let topPitRoom = rooms[x][y]
+                    if topPitRoom.roomType == .sideRoom {
+                        if let middleRoom = rooms.neighbor(of: topPitRoom, thatIs: .drop), middleRoom.roomType == .sideRoom, let bottomRoom = rooms.neighbor(of: middleRoom, thatIs: .drop), bottomRoom.roomType == .sideRoom {
+                            topPitRoom.roomType = .pitTop
+                            middleRoom.roomType = .pitMiddle
+                            bottomRoom.roomType = .pitBottom
+                        }
+                    }
+                }
+            }
+        }
+        
         for y in 0..<levelGridSize.y {
             for x in 0..<levelGridSize.x {
                 rooms[x][y].generateRoom()
             }
         }
-        
-        // TODO: consider caching the actual room paths, rebuilding from the grid is a pain in the ass.
-//        for rows in 0..<levelGridSize.rows {
-//            for cols in 0..<levelGridSize.cols {
-//                print("\(rooms[rows][cols].gridLocation), \(rooms[rows][cols].roomType), \(rooms[rows][cols].pathDirection) start:\(rooms[rows][cols].isStartRoom), end: \(rooms[rows][cols].isEndRoom)")
-//            }
-//        }
-        
-    //    rooms[1][0].generateStartRoom()
-        
         return rooms
     }()
+}
+
+// scene consists of 4 x 4 grid of rooms
+class GameScene: SKScene {
+    let level = Level()
     
     override func didMove(to view: SKView) {
-        (rooms.flatMap { $0 }).forEach { addChild($0) }
+        (level.rooms.flatMap { $0 }).forEach { addChild($0) }
     }
     
     
