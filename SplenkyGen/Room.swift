@@ -112,6 +112,7 @@ fileprivate extension RoomTemplate {
     }
 }
 
+// TODO: too many pits.. not checking end start for pit creation
 enum RoomType {
     case sideRoom
     case path // also known as 'main room'
@@ -362,11 +363,21 @@ class Room: SKNode {
     }
     
     func generateRoom() {
-        //        guard isStartRoom else {
-        //            assert(false)
-        //        }
-        
         print("\(roomType)")
+        
+        enum SGSprite {
+            case caveBG
+            case block
+            case brick
+            case pushBlock
+            case spikes
+            case entrance
+            case exit
+            case ladder
+            case ladderTop
+            
+            
+        }
         
         if let template = roomType.template(room: self) {
             var template = template

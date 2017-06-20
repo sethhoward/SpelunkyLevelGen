@@ -6,49 +6,96 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SplenkyGen/GameScene.swift"
-            timestampString = "518724956.075559"
+            timestampString = "519682255.060904"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "213"
-            endingLineNumber = "213"
-            landmarkName = "generatePath()"
+            startingLineNumber = "133"
+            endingLineNumber = "133"
+            landmarkName = "keyDown(with:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "SplenkyGen/GameScene.swift"
-            timestampString = "518724956.076001"
+            filePath = "SplenkyGen/Room.swift"
+            timestampString = "519682255.061007"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "295"
-            endingLineNumber = "295"
-            landmarkName = "rooms"
+            startingLineNumber = "455"
+            endingLineNumber = "455"
+            landmarkName = "gridLocation"
             landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SplenkyGen/GameScene.swift"
-            timestampString = "518724956.076325"
+            timestampString = "519682255.061358"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "293"
-            endingLineNumber = "293"
-            landmarkName = "rooms"
-            landmarkType = "24">
+            startingLineNumber = "85"
+            endingLineNumber = "85"
+            landmarkName = "didMove(to:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "SplenkyGen.GameScene.didMove(to: __C.SKView) -&gt; ()"
+                  moduleName = "SplenkyGen"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/sehoward15/Dropbox/Dev/SplenkyGen/SplenkyGen/GameScene.swift"
+                  timestampString = "519682118.332203"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "85"
+                  endingLineNumber = "85"
+                  offsetFromSymbolStart = "28">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Swift.Array&lt;SplenkyGen.Room&gt;) -&gt; Swift.Array&lt;SplenkyGen.Room&gt; in SplenkyGen.GameScene.didMove(to: __C.SKView) -&gt; ()"
+                  moduleName = "SplenkyGen"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/sehoward15/Dropbox/Dev/SplenkyGen/SplenkyGen/GameScene.swift"
+                  timestampString = "519682118.334631"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "85"
+                  endingLineNumber = "85"
+                  offsetFromSymbolStart = "8">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #2 (SplenkyGen.Room) -&gt; () in SplenkyGen.GameScene.didMove(to: __C.SKView) -&gt; ()"
+                  moduleName = "SplenkyGen"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/sehoward15/Dropbox/Dev/SplenkyGen/SplenkyGen/GameScene.swift"
+                  timestampString = "519682118.3372"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "85"
+                  endingLineNumber = "85"
+                  offsetFromSymbolStart = "16">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
