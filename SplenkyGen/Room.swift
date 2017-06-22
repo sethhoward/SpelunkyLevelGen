@@ -161,11 +161,11 @@ enum RoomType {
             return template
         case .sideRoom:
             var template: RoomTemplate = {
-                var randome: Int {
+                var random: Int {
                     return randomInt(min: 1, max: 9)
                 }
                 
-                switch randome {
+                switch random {
                 case 1: return "00000000000010111100000000000000011010000050000000000000000000000000001111111111"
                 // high walls
                 case 2: return "110000000040L600000011P000000011L000000011L5000000110000000011000000001111111111"
@@ -320,8 +320,8 @@ enum RoomType {
 
 // 10 x 8 collection of sprites that make up a room
 class Room: SKNode {
-    var isStartRoom = false
-    var isEndRoom = false
+ //   var isStartRoom = false
+ //   var isEndRoom = false
     var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
     var gridLocation: (x: Int, y: Int) = (0, 0)
     var roomType: RoomType = .sideRoom
@@ -331,10 +331,9 @@ class Room: SKNode {
         
         for x in 0..<roomGridSize.x {
             for y in 0..<roomGridSize.y {
-                // let position = CGPoint(x: CGFloat(rows) * spriteSize.width, y: CGFloat(cols) * spriteSize.height)
                 nodes[x][y] = RoomCell()
                 nodes[x][y].gridLocation = (x: x, y: y)
-                nodes[x][y].bgColor = randomRPG()
+                nodes[x][y].color = randomRPG()
             }
         }
         
@@ -353,7 +352,7 @@ class Room: SKNode {
         super.init()
         for cols in roomLayoutNodes {
             for node in cols {
-                addChild(node.background)
+                addChild(node)
             }
         }
     }
@@ -365,20 +364,6 @@ class Room: SKNode {
     func generateRoom() {
         print("\(roomType)")
         
-        enum SGSprite {
-            case caveBG
-            case block
-            case brick
-            case pushBlock
-            case spikes
-            case entrance
-            case exit
-            case ladder
-            case ladderTop
-            
-            
-        }
-        
         if let template = roomType.template(room: self) {
             var template = template
             
@@ -387,45 +372,45 @@ class Room: SKNode {
                     let char = template.characters.popFirst()!
                     switch char {
                     case "0":
-                        roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
+                        roomLayoutNodes[x][y].sprite = .caveBackground
                     case "1":
                         if randomInt(min: 1, max: 10) == 1 {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sBlock.png")
+                            roomLayoutNodes[x][y].sprite = .block
                         } else {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sBrick.png")
+                            roomLayoutNodes[x][y].sprite = .brick
                         }
                     case "2":
                         if randomInt(min: 1, max: 2) == 1 {
                             if randomInt(min: 1, max: 10) == 1 {
-                                roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sBlock.png")
+                                roomLayoutNodes[x][y].sprite = .block
                             } else {
-                                roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sBrick.png")
+                                roomLayoutNodes[x][y].sprite = .brick
                             }
                         } else {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
+                            roomLayoutNodes[x][y].sprite = .caveBackground
                         }
                     case "4":
                         if randomInt(min: 1, max: 4) == 1 {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "PushBlock.png")
+                            roomLayoutNodes[x][y].sprite = .pushBlock
                         } else {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
+                            roomLayoutNodes[x][y].sprite = .caveBackground
                         }
                     case "7":
                         if randomInt(min: 1, max: 3) == 1 {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
+                            roomLayoutNodes[x][y].sprite = .caveBackground
                         } else {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Spikes.png")
+                            roomLayoutNodes[x][y].sprite = .spikes
                         }
                     case "9":
                         if roomType == .start {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Entrance.png")
+                            roomLayoutNodes[x][y].sprite = .entrance
                         } else {
-                            roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Exit.png")
+                            roomLayoutNodes[x][y].sprite = .exit
                         }
                     case "L":
-                        roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "Ladder.png")
+                        roomLayoutNodes[x][y].sprite = .ladder
                     case "P":
-                        roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "LadderTop.png")
+                        roomLayoutNodes[x][y].sprite = .ladderTop
                     default:()
                         print("******** missing texture \(char)")
                         //  roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
@@ -440,43 +425,74 @@ class Room: SKNode {
 
 // MARK: -
 
-class RoomCell {
-    let background: SKSpriteNode
+enum SGSprite {
+    case caveBackground
+    case block
+    case brick
+    case pushBlock
+    case spikes
+    case entrance
+    case exit
+    case ladder
+    case ladderTop
     
-    //    var indexPosition: (x: Int, y: Int)! {
-    //        didSet {
-    //            gridLocation = (x: indexPosition.x, y: indexPosition.y)
-    //
-    //        }
-    //    }
+    mutating func configure(sprite: SKSpriteNode) {
+        switch self {
+        case .brick:
+            sprite.texture = SKTexture(imageNamed: "sBrick.png")
+            sprite.name = "brick"
+        case .block:
+            sprite.texture = SKTexture(imageNamed: "sBlock.png")
+            sprite.name = "block"
+        case .pushBlock:
+            sprite.texture = SKTexture(imageNamed: "PushBlock.png")
+            sprite.name = "pushBlock"
+        case .spikes:
+            sprite.texture = SKTexture(imageNamed: "Spikes.png")
+            sprite.name = "spike"
+        case .entrance:
+            sprite.texture = SKTexture(imageNamed: "Entrance.png")
+            sprite.name = "entrance"
+        case .exit:
+            sprite.texture = SKTexture(imageNamed: "Exit.png")
+            sprite.name = "exit"
+        case .ladder:
+            sprite.texture = SKTexture(imageNamed: "Ladder.png")
+            sprite.name = "ladder"
+        case .ladderTop:
+            sprite.texture = SKTexture(imageNamed: "LadderTop.png")
+            sprite.name = "ladderTop"
+        default:
+            sprite.texture = SKTexture(imageNamed: "sCaveBG.png")
+            sprite.name = "background"
+        }
+    }
     
+}
+
+class RoomCell: SKSpriteNode {
+    var sprite: SGSprite? {
+        didSet {
+            sprite?.configure(sprite: self)
+        }
+    }
     var gridLocation: (x: Int, y: Int) = (0, 0) {
         didSet {
             position = CGPoint(x: (CGFloat(gridLocation.x) * spriteSize.width), y: ((CGFloat(roomGridSize.x) - 1 - CGFloat(gridLocation.y)) * spriteSize.height))
         }
     }
     
-    var position: CGPoint {
-        get {
-            return background.position
-        }
-        set(newPosition) {
-            background.position = newPosition
-        }
-    }
-    
-    var bgColor: SKColor {
-        set(newColor) {
-            background.color = newColor
-        }
-        get {
-            return background.color
-        }
-    }
-    
     init() {
-        background = SKSpriteNode(color: .clear, size: spriteSize)
-        background.anchorPoint = CGPoint(x: 0, y: 0)
+       super.init(texture: nil, color: .clear, size: spriteSize)
+    }
+    
+    init(indexLocation: (x: Int, y: Int), color: SKColor = .clear) {
+        super.init(texture: nil, color: color, size: spriteSize)
+        gridLocation = indexLocation
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -499,7 +515,7 @@ struct RoomPath {
         let startRoom: Room = {
             let randomX = randomInt(min: 0, max: 3)
             let room = self.rooms[randomX][0]
-            room.isStartRoom = true
+          //  room.isStartRoom = true
             room.roomType = .start
             room.pathDirection = [.left, .right]
             self.rooms[randomX][0] = room
@@ -542,9 +558,8 @@ struct RoomPath {
             var downPath: Room? {
                 guard let downRoom = rooms.neighbor(of: currentRoom, thatIs: .drop) else {
                     currentRoom.roomType = .end
-                    currentRoom.isEndRoom = true
+                  //  currentRoom.isEndRoom = true
                     rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                   // path.append(currentRoom)
                     return nil
                 }
                 
@@ -553,7 +568,6 @@ struct RoomPath {
                     currentRoom.roomType = .path
                 }
                 rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
-                //path.append(currentRoom)
                 downRoom.pathDirection = [.left, .right, .up]
                 downRoom.roomType = .path
                 return downRoom
