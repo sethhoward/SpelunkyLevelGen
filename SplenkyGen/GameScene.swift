@@ -85,8 +85,8 @@ class GameScene: SKScene {
         (level.rooms.flatMap { $0 }).forEach { addChild($0) }
         
         let cam = SKCameraNode()
-        cam.xScale = 0.45
-        cam.yScale = 0.45
+   //     cam.xScale = 0.45
+   //     cam.yScale = 0.45
         
         camera = cam
         addChild(cam)

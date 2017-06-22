@@ -318,113 +318,6 @@ enum RoomType {
 
 // MARK: -
 
-// 10 x 8 collection of sprites that make up a room
-class Room: SKNode {
- //   var isStartRoom = false
- //   var isEndRoom = false
-    var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
-    var gridLocation: (x: Int, y: Int) = (0, 0)
-    var roomType: RoomType = .sideRoom
-    
-    private lazy var roomLayoutNodes: [[RoomCell]] = {
-        var nodes = dim(roomGridSize.x, dim(roomGridSize.y, RoomCell()))
-        
-        for x in 0..<roomGridSize.x {
-            for y in 0..<roomGridSize.y {
-                nodes[x][y] = RoomCell()
-                nodes[x][y].gridLocation = (x: x, y: y)
-                nodes[x][y].color = randomRPG()
-            }
-        }
-        
-        count += 1
-        return nodes
-    }()
-    
-    var indexPosition: (x: Int, y: Int)! {
-        didSet {
-            gridLocation = (x: indexPosition.x, y: indexPosition.y)
-            position = CGPoint(x: (CGFloat(roomGridSize.x) * spriteSize.width) * CGFloat(indexPosition.x), y: (CGFloat(roomGridSize.y) * spriteSize.height) * (3 - CGFloat(indexPosition.y)))
-        }
-    }
-    
-    override init() {
-        super.init()
-        for cols in roomLayoutNodes {
-            for node in cols {
-                addChild(node)
-            }
-        }
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func generateRoom() {
-        print("\(roomType)")
-        
-        if let template = roomType.template(room: self) {
-            var template = template
-            
-            for y in 0..<roomGridSize.y {
-                for x in 0..<roomGridSize.x {
-                    let char = template.characters.popFirst()!
-                    switch char {
-                    case "0":
-                        roomLayoutNodes[x][y].sprite = .caveBackground
-                    case "1":
-                        if randomInt(min: 1, max: 10) == 1 {
-                            roomLayoutNodes[x][y].sprite = .block
-                        } else {
-                            roomLayoutNodes[x][y].sprite = .brick
-                        }
-                    case "2":
-                        if randomInt(min: 1, max: 2) == 1 {
-                            if randomInt(min: 1, max: 10) == 1 {
-                                roomLayoutNodes[x][y].sprite = .block
-                            } else {
-                                roomLayoutNodes[x][y].sprite = .brick
-                            }
-                        } else {
-                            roomLayoutNodes[x][y].sprite = .caveBackground
-                        }
-                    case "4":
-                        if randomInt(min: 1, max: 4) == 1 {
-                            roomLayoutNodes[x][y].sprite = .pushBlock
-                        } else {
-                            roomLayoutNodes[x][y].sprite = .caveBackground
-                        }
-                    case "7":
-                        if randomInt(min: 1, max: 3) == 1 {
-                            roomLayoutNodes[x][y].sprite = .caveBackground
-                        } else {
-                            roomLayoutNodes[x][y].sprite = .spikes
-                        }
-                    case "9":
-                        if roomType == .start {
-                            roomLayoutNodes[x][y].sprite = .entrance
-                        } else {
-                            roomLayoutNodes[x][y].sprite = .exit
-                        }
-                    case "L":
-                        roomLayoutNodes[x][y].sprite = .ladder
-                    case "P":
-                        roomLayoutNodes[x][y].sprite = .ladderTop
-                    default:()
-                        print("******** missing texture \(char)")
-                        //  roomLayoutNodes[x][y].background.texture = SKTexture(imageNamed: "sCaveBG.png")
-                    }
-                    
-                    
-                }
-            }
-        }
-    }
-}
-
-// MARK: -
-
 enum SGSprite {
     case caveBackground
     case block
@@ -468,6 +361,42 @@ enum SGSprite {
         }
     }
     
+    init?(character: Character, roomType: RoomType) {
+        switch character {
+        case "1" where randomInt(min: 1, max: 10) == 1:
+            self = .block
+        case "1":
+            self = .brick
+        case "2":
+            if randomInt(min: 1, max: 2) == 1 {
+                if randomInt(min: 1, max: 10) == 1 {
+                    self = .block
+                } else {
+                    self = .brick
+                }
+            } else {
+                self = .caveBackground
+            }
+        case "4" where randomInt(min: 1, max: 4) == 1:
+            self = .pushBlock
+        case "7":
+            self = .spikes
+        case "9" where roomType == .start:
+            self = .entrance
+        case "9" where roomType == .end:
+            self = .exit
+        case "L":
+            self = .ladder
+        case "P":
+            self = .ladderTop
+        case "0", "4",
+             "7" where randomInt(min: 1, max: 3) == 1:      // can be the future 'default'
+            self = .caveBackground
+        default:
+            print("******** missing texture \(character)")
+            return nil
+        }
+    }
 }
 
 class RoomCell: SKSpriteNode {
@@ -498,35 +427,84 @@ class RoomCell: SKSpriteNode {
 
 // MARK: -
 
-/*
- 0 - side roome
- 1 - left and right
- 2- left right and bottom
- 3 - left right top
- 
- */
+// 10 x 8 collection of sprites that make up a room
+class Room: SKNode {
+    //   var isStartRoom = false
+    //   var isEndRoom = false
+    var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
+    var gridLocation: (x: Int, y: Int) = (0, 0)
+    var roomType: RoomType = .sideRoom
+    
+    private lazy var roomLayoutNodes: [[RoomCell]] = {
+        var nodes = dim(roomGridSize.x, dim(roomGridSize.y, RoomCell()))
+        
+        for x in 0..<roomGridSize.x {
+            for y in 0..<roomGridSize.y {
+                nodes[x][y] = RoomCell()
+                nodes[x][y].gridLocation = (x: x, y: y)
+                nodes[x][y].color = randomRPG()
+            }
+        }
+        
+        count += 1
+        return nodes
+    }()
+    
+    var indexPosition: (x: Int, y: Int)! {
+        didSet {
+            gridLocation = (x: indexPosition.x, y: indexPosition.y)
+            position = CGPoint(x: (CGFloat(roomGridSize.x) * spriteSize.width) * CGFloat(indexPosition.x), y: (CGFloat(roomGridSize.y) * spriteSize.height) * (3 - CGFloat(indexPosition.y)))
+        }
+    }
+    
+    override init() {
+        super.init()
+        for cols in roomLayoutNodes {
+            for node in cols {
+                addChild(node)
+            }
+        }
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func generateRoom() {
+        if var template = roomType.template(room: self) {
+            for y in 0..<roomGridSize.y {
+                for x in 0..<roomGridSize.x {
+                    roomLayoutNodes[x][y].sprite = SGSprite(character: template.characters.popFirst()!, roomType: roomType)
+                }
+            }
+        }
+    }
+}
 
-// maybe make this a class?
-struct RoomPath {
+// MARK: - RoomPath
+
+class RoomPath {
     var rooms: [[Room]]
     
-    mutating func generatePath() {
+    init(rooms: [[Room ]]) {
+        self.rooms = rooms
+    }
+    
+    func generatePath() {
         var path = [Room]()
         let startRoom: Room = {
-            let randomX = randomInt(min: 0, max: 3)
-            let room = self.rooms[randomX][0]
-          //  room.isStartRoom = true
+            var room: Room {
+                let randomX = randomInt(min: 0, max: 3)
+                return self.rooms[randomX][0]
+            }
             room.roomType = .start
-            room.pathDirection = [.left, .right]
-            self.rooms[randomX][0] = room
             return room
         }()
         
         var currentRoom: Room = startRoom
         path.append(startRoom)
-        var running = true
         
-        while running {
+        pathLoop: while true {
             var randomNumber: Int {
                 switch currentRoom.gridLocation.x {
                 case 0:
@@ -554,20 +532,19 @@ struct RoomPath {
                 return rightRoom
             }
             
-            // mutating
+            // mutating currentRoom
             var downPath: Room? {
                 guard let downRoom = rooms.neighbor(of: currentRoom, thatIs: .drop) else {
                     currentRoom.roomType = .end
-                  //  currentRoom.isEndRoom = true
-                    rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
                     return nil
                 }
                 
                 currentRoom.pathDirection = [.left, .right, .drop]
+                // label if we're not start or end
                 if currentRoom.roomType == .sideRoom {
                     currentRoom.roomType = .path
                 }
-                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
+                
                 downRoom.pathDirection = [.left, .right, .up]
                 downRoom.roomType = .path
                 return downRoom
@@ -575,7 +552,6 @@ struct RoomPath {
             
             func append(room: Room) {
                 currentRoom = room
-                rooms[currentRoom.gridLocation.x][currentRoom.gridLocation.y] = currentRoom
                 path.append(currentRoom)
             }
             
@@ -590,7 +566,7 @@ struct RoomPath {
                     if let room = downPath {
                         append(room: room)
                     } else {
-                        running = false
+                        break pathLoop
                     }
                 }
             case 3, 4:
@@ -602,20 +578,20 @@ struct RoomPath {
                     if let room = downPath {
                         append(room: room)
                     } else {
-                        running = false
+                        break pathLoop
                     }
                 }
             default: // 5
                 if let room = downPath {
                     append(room: room)
                 } else {
-                    running = false
+                    break pathLoop
                 }
             }
         }
-        
-        for room in path {
-            print("l: \(room.gridLocation) d: \(room.pathDirection) t: \(room.roomType)")
-        }
+//
+//        for room in path {
+//            print("l: \(room.gridLocation) d: \(room.pathDirection) t: \(room.roomType)")
+//        }
     }
 }

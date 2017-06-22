@@ -60,7 +60,7 @@ extension Array where Element == [Room] {
             if index.y < self[0].count {
                 return self[index.x][index.y]
             }
-        default: ()
+        default:()
         }
         
         return nil
