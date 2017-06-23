@@ -9,6 +9,8 @@
 import Foundation
 import SpriteKit
 
+typealias MatrixIndex = (x: Int, y: Int)
+
 // MARK: -
 
 enum PathDirection {
@@ -405,7 +407,7 @@ class RoomCell: SKSpriteNode {
             sprite?.configure(sprite: self)
         }
     }
-    var gridLocation: (x: Int, y: Int) = (0, 0) {
+    var gridLocation: MatrixIndex = (0, 0) {
         didSet {
             position = CGPoint(x: (CGFloat(gridLocation.x) * spriteSize.width), y: ((CGFloat(roomGridSize.x) - 1 - CGFloat(gridLocation.y)) * spriteSize.height))
         }
@@ -415,7 +417,7 @@ class RoomCell: SKSpriteNode {
        super.init(texture: nil, color: .clear, size: spriteSize)
     }
     
-    init(indexLocation: (x: Int, y: Int), color: SKColor = .clear) {
+    init(indexLocation: MatrixIndex, color: SKColor = .clear) {
         super.init(texture: nil, color: color, size: spriteSize)
         gridLocation = indexLocation
     }
@@ -432,8 +434,13 @@ class Room: SKNode {
     //   var isStartRoom = false
     //   var isEndRoom = false
     var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
-    var gridLocation: (x: Int, y: Int) = (0, 0)
+    var gridLocation: MatrixIndex = (0, 0)
     var roomType: RoomType = .sideRoom
+    var entranceCell: RoomCell? {
+        guard roomType == .start else { return nil }
+        
+        return ((roomLayoutNodes.flatMap { $0 }).filter { $0.sprite == .entrance }).first
+    }
     
     private lazy var roomLayoutNodes: [[RoomCell]] = {
         var nodes = dim(roomGridSize.x, dim(roomGridSize.y, RoomCell()))
@@ -450,7 +457,7 @@ class Room: SKNode {
         return nodes
     }()
     
-    var indexPosition: (x: Int, y: Int)! {
+    var indexPosition: MatrixIndex! {
         didSet {
             gridLocation = (x: indexPosition.x, y: indexPosition.y)
             position = CGPoint(x: (CGFloat(roomGridSize.x) * spriteSize.width) * CGFloat(indexPosition.x), y: (CGFloat(roomGridSize.y) * spriteSize.height) * (3 - CGFloat(indexPosition.y)))

@@ -12,6 +12,25 @@ import GameplayKit
 let levelGridSize: (x: Int, y: Int) = (4, 4)
 let spriteSize = CGSize(width: 32, height: 32)
 let roomGridSize: (x: Int, y: Int) = (10, 8)
+
+var roomSize: CGSize {
+    return CGSize(width: spriteSize.width * CGFloat(roomGridSize.x), height: spriteSize.height * CGFloat(roomGridSize.y))
+}
+
+extension RoomCell {
+    var pointInRoom: CGPoint {
+        return CGPoint(x: CGFloat(gridLocation.x) * spriteSize.width, y: CGFloat(gridLocation.y) * spriteSize.height)
+    }
+}
+
+
+extension Room {
+    var locationInParent: CGPoint {
+        return CGPoint(x: CGFloat(gridLocation.x) * roomSize.width, y: CGFloat(gridLocation.y * roomSize.rows))
+    }
+}
+
+// TODO: remove, was quick and dirty logic to get things moving
 var tempGlobalRooms: [[Room]]!
 
 private let probSnakePit = 8
@@ -68,6 +87,10 @@ class Level {
         }
         return rooms
     }()
+    
+    lazy var startRoom: Room = {
+        return ((self.rooms.flatMap { $0 }).filter { return ($0.roomType == .start) }).first!
+    }()
 }
 
 // scene consists of 4 x 4 grid of rooms
@@ -85,12 +108,20 @@ class GameScene: SKScene {
         (level.rooms.flatMap { $0 }).forEach { addChild($0) }
         
         let cam = SKCameraNode()
-   //     cam.xScale = 0.45
-   //     cam.yScale = 0.45
+        cam.xScale = 0.4
+        cam.yScale = 0.4
         
         camera = cam
         addChild(cam)
-        cam.position = CGPoint(x: frame.midX, y: frame.midY)
+        
+        let startRoom = level.startRoom
+        
+        // TODO: return RoomCell and not location
+        if let entrance = startRoom.entranceCell {
+            cam.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x - spriteSize.width/2, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height/2))
+        } else {
+            assert(false)
+        }
     }
     
     
