@@ -336,6 +336,12 @@ enum SGSprite {
         case .brick:
             sprite.texture = SKTexture(imageNamed: "sBrick.png")
             sprite.name = "brick"
+            let physicsBody = SKPhysicsBody(rectangleOf: spriteSize)
+            physicsBody.categoryBitMask = 0x1 << 1
+            physicsBody.contactTestBitMask = 0x1 << 2
+            physicsBody.pinned = true
+            physicsBody.allowsRotation = false
+            sprite.physicsBody = physicsBody
         case .block:
             sprite.texture = SKTexture(imageNamed: "sBlock.png")
             sprite.name = "block"
@@ -431,14 +437,11 @@ class RoomCell: SKSpriteNode {
 
 // 10 x 8 collection of sprites that make up a room
 class Room: SKNode {
-    //   var isStartRoom = false
-    //   var isEndRoom = false
     var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
     var gridLocation: MatrixIndex = (0, 0)
     var roomType: RoomType = .sideRoom
     var entranceCell: RoomCell? {
         guard roomType == .start else { return nil }
-        
         return ((roomLayoutNodes.flatMap { $0 }).filter { $0.sprite == .entrance }).first
     }
     

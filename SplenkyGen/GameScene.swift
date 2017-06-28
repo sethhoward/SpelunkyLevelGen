@@ -60,6 +60,7 @@ class Level {
         roomPath.generatePath()
         
         // check for pit
+        // TODO: move LevelType logic
         if self.levelType == .mines && randomInt(min: 1, max: probSnakePit) == 1 {
             func createPit() {
                 for y in 0..<2 {
@@ -93,9 +94,26 @@ class Level {
     }()
 }
 
+class Player: SKSpriteNode {
+    init() {
+        super.init(texture: SKTexture(imageNamed: "charStandLeft.png"), color: .clear, size:CGSize(width: 32, height: 32))
+        let physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 20, height: 28))
+      //  physicsBody.pinned = true
+        physicsBody.allowsRotation = false
+        physicsBody.categoryBitMask = 0x1 << 2
+        physicsBody.contactTestBitMask = 0x1 << 1
+        self.physicsBody = physicsBody
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 // scene consists of 4 x 4 grid of rooms
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     let level = Level()
+    var player: Player!
     
     enum KeyState {
         case unknown
@@ -107,23 +125,32 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         (level.rooms.flatMap { $0 }).forEach { addChild($0) }
         
-        let cam = SKCameraNode()
-        cam.xScale = 0.4
-        cam.yScale = 0.4
-        
-        camera = cam
-        addChild(cam)
-        
-        let startRoom = level.startRoom
-        
-        // TODO: return RoomCell and not location
-        if let entrance = startRoom.entranceCell {
-            cam.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x - spriteSize.width/2, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height/2))
-        } else {
-            assert(false)
+        let camera = SKCameraNode().build {
+            $0.xScale = 0.4
+            $0.yScale = 0.4
+            let startRoom = level.startRoom
+            
+            if let entrance = startRoom.entranceCell {
+                $0.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height))
+            } else {
+                assert(false)
+            }
         }
+        
+        player = Player()
+        player.position = camera.position
+        player.zPosition = 3
+        addChild(player)
+        
+        self.camera = camera
+        addChild(camera)
+        
+        physicsWorld.contactDelegate = self
     }
     
+    func didBegin(_ contact: SKPhysicsContact) {
+        print("collision: \(contact.bodyA) :: \(contact.bodyB)")
+    }
     
     func touchDown(atPoint pos : CGPoint) {
 
@@ -166,18 +193,22 @@ class GameScene: SKScene {
         case .left:
             keyStates.append(.active(keyCode: event.keyCode) {
                 self.camera?.position = CGPoint(x: self.camera!.position.x - offset, y: self.camera!.position.y)
+                self.player.position = self.camera!.position
             })
         case .right:
             keyStates.append(.active(keyCode: event.keyCode) {
                 self.camera?.position = CGPoint(x: self.camera!.position.x + offset, y: self.camera!.position.y)
+                self.player.position = self.camera!.position
             })
         case .up:
             keyStates.append(.active(keyCode: event.keyCode) {
                 self.camera?.position = CGPoint(x: self.camera!.position.x, y: self.camera!.position.y + offset)
+                self.player.position = self.camera!.position
             })
         case .down:
             keyStates.append(.active(keyCode: event.keyCode) {
                 self.camera?.position = CGPoint(x: self.camera!.position.x, y: self.camera!.position.y - offset)
+                self.player.position = self.camera!.position
             })
         }
     }
@@ -206,5 +237,7 @@ class GameScene: SKScene {
                 event()
             }
         }
+        
+        self.camera?.position = self.player.position
     }
 }

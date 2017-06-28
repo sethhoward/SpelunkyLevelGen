@@ -9,6 +9,16 @@
 import Foundation
 import SpriteKit
 
+protocol Buildable: class {}
+extension Buildable {
+    @discardableResult func build(_ transform: (Self) -> Void) -> Self {
+        transform(self)
+        return self
+    }
+}
+
+extension NSObject: Buildable {}
+
 func randomInt(min: Int, max:Int) -> Int {
     return min + Int(arc4random_uniform(UInt32(max - min + 1)))
 }
