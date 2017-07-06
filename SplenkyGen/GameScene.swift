@@ -13,10 +13,6 @@ let levelGridSize: (x: Int, y: Int) = (4, 4)
 let spriteSize = CGSize(width: 32, height: 32)
 let roomGridSize: (x: Int, y: Int) = (10, 8)
 
-var roomSize: CGSize {
-    return CGSize(width: spriteSize.width * CGFloat(roomGridSize.x), height: spriteSize.height * CGFloat(roomGridSize.y))
-}
-
 extension RoomCell {
     var pointInRoom: CGPoint {
         return CGPoint(x: CGFloat(gridLocation.x) * spriteSize.width, y: CGFloat(gridLocation.y) * spriteSize.height)
@@ -28,6 +24,15 @@ extension Room {
     var locationInParent: CGPoint {
         return CGPoint(x: CGFloat(gridLocation.x) * roomSize.width, y: CGFloat(gridLocation.y * roomSize.rows))
     }
+    
+    var roomSize: CGSize {
+        return CGSize(width: spriteSize.width * CGFloat(roomGridSize.x), height: spriteSize.height * CGFloat(roomGridSize.y))
+    }
+}
+
+struct CollisionType {
+    static let brick: UInt32 = 0x1 << 1
+    static let character: UInt32 = 0x1 << 2
 }
 
 // TODO: remove, was quick and dirty logic to get things moving
@@ -100,8 +105,8 @@ class Player: SKSpriteNode {
         let physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 20, height: 28))
       //  physicsBody.pinned = true
         physicsBody.allowsRotation = false
-        physicsBody.categoryBitMask = 0x1 << 2
-        physicsBody.contactTestBitMask = 0x1 << 1
+        physicsBody.categoryBitMask = CollisionType.character
+        physicsBody.contactTestBitMask = CollisionType.brick
         self.physicsBody = physicsBody
     }
     
@@ -126,8 +131,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         (level.rooms.flatMap { $0 }).forEach { addChild($0) }
         
         let camera = SKCameraNode().build {
-            $0.xScale = 0.4
-            $0.yScale = 0.4
+            $0.xScale = 1//0.4
+            $0.yScale = 1//0.4
             let startRoom = level.startRoom
             
             if let entrance = startRoom.entranceCell {

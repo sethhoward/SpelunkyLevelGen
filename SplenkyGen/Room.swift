@@ -83,13 +83,14 @@ fileprivate extension RoomTemplate {
                 }
             }
             
+            print("\(strObs1), \(strObs2), \(strObs3)")
+            
             return (strObs1, strObs2, strObs3)
         }
     }
     
     mutating func placeObstacle() {
-        //var template = String(self)! // returned value
-        print("\(self)")
+        print("b: \(self)")
         var tempString = String(self)! // observed
         for i in 0..<self.count {
             if let tileValue = Int(String(tempString.characters.popFirst()!)), let tile = TileType(rawValue: tileValue) {
@@ -110,6 +111,7 @@ fileprivate extension RoomTemplate {
             }
         }
         
+        print("a: \(self)")
        // return template
     }
 }
@@ -331,42 +333,57 @@ enum SGSprite {
     case ladder
     case ladderTop
     
-    mutating func configure(sprite: SKSpriteNode) {
+    func configure() -> [SKSpriteNode] {
+        var sprites = [SKSpriteNode]()
+        
         switch self {
         case .brick:
-            sprite.texture = SKTexture(imageNamed: "sBrick.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "sBrick.png"), color: .clear, size: spriteSize)//SKSpriteNode(texture: SKTexture(imageNamed: "sBrick.png"))
             sprite.name = "brick"
             let physicsBody = SKPhysicsBody(rectangleOf: spriteSize)
-            physicsBody.categoryBitMask = 0x1 << 1
-            physicsBody.contactTestBitMask = 0x1 << 2
+            physicsBody.categoryBitMask = CollisionType.brick
+            physicsBody.contactTestBitMask = CollisionType.character
             physicsBody.pinned = true
             physicsBody.allowsRotation = false
             sprite.physicsBody = physicsBody
+            sprites.append(sprite)
         case .block:
-            sprite.texture = SKTexture(imageNamed: "sBlock.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "sBlock.png"), color: .clear, size: spriteSize)
             sprite.name = "block"
+            sprites.append(sprite)
         case .pushBlock:
-            sprite.texture = SKTexture(imageNamed: "PushBlock.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "PushBlock.png"), color: .clear, size: spriteSize)
             sprite.name = "pushBlock"
-        case .spikes:
-            sprite.texture = SKTexture(imageNamed: "Spikes.png")
-            sprite.name = "spike"
+            sprites.append(sprite)
         case .entrance:
-            sprite.texture = SKTexture(imageNamed: "Entrance.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "Entrance.png"), color: .clear, size: spriteSize)
             sprite.name = "entrance"
+            sprites.append(sprite)
         case .exit:
-            sprite.texture = SKTexture(imageNamed: "Exit.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "Exit.png"), color: .clear, size: spriteSize)
             sprite.name = "exit"
+            sprites.append(sprite)
         case .ladder:
-            sprite.texture = SKTexture(imageNamed: "Ladder.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "Ladder.png"), color: .clear, size: spriteSize)
             sprite.name = "ladder"
+            sprites.append(sprite)
         case .ladderTop:
-            sprite.texture = SKTexture(imageNamed: "LadderTop.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "LadderTop.png"), color: .clear, size: spriteSize)
             sprite.name = "ladderTop"
+            sprites.append(sprite)
+        case .spikes:
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "Spikes.png"), color: .clear, size: spriteSize)
+            sprite.name = "spike"
+            sprite.zPosition = 1
+            sprites.append(sprite)
+            fallthrough
         default:
-            sprite.texture = SKTexture(imageNamed: "sCaveBG.png")
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "sCaveBG.png"), color: .clear, size: spriteSize)
             sprite.name = "background"
+            sprites.append(sprite)
         }
+        
+        return sprites
     }
     
     init?(character: Character, roomType: RoomType) {
@@ -398,7 +415,7 @@ enum SGSprite {
         case "P":
             self = .ladderTop
         case "0", "4",
-             "7" where randomInt(min: 1, max: 3) == 1:      // can be the future 'default'
+             "7" where randomInt(min: 1, max: 3) == 1:      // can be the future 'default' assuming all textures are accounted for.
             self = .caveBackground
         default:
             print("******** missing texture \(character)")
@@ -407,29 +424,36 @@ enum SGSprite {
     }
 }
 
-class RoomCell: SKSpriteNode {
+class RoomCell  {
+    var nodes: [SKSpriteNode]? /// = SKSpriteNode(texture: nil, color: .clear, size: spriteSize)
     var sprite: SGSprite? {
         didSet {
-            sprite?.configure(sprite: self)
+            nodes = sprite?.configure()
+            nodes?.forEach {
+                $0.position = CGPoint(x: (CGFloat(gridLocation.x) * spriteSize.width), y: ((CGFloat(roomGridSize.x) - 1 - CGFloat(gridLocation.y)) * spriteSize.height))
+            }
         }
     }
     var gridLocation: MatrixIndex = (0, 0) {
         didSet {
-            position = CGPoint(x: (CGFloat(gridLocation.x) * spriteSize.width), y: ((CGFloat(roomGridSize.x) - 1 - CGFloat(gridLocation.y)) * spriteSize.height))
+            nodes?.forEach {
+                $0.position = CGPoint(x: (CGFloat(gridLocation.x) * spriteSize.width), y: ((CGFloat(roomGridSize.x) - 1 - CGFloat(gridLocation.y)) * spriteSize.height))
+            }
         }
     }
     
-    init() {
-       super.init(texture: nil, color: .clear, size: spriteSize)
+    var color: SKColor = .clear {
+        didSet {
+            nodes?.forEach {
+                $0.color = color
+            }
+        }
     }
     
-    init(indexLocation: MatrixIndex, color: SKColor = .clear) {
-        super.init(texture: nil, color: color, size: spriteSize)
+    init() {}
+    
+    init(indexLocation: MatrixIndex) {
         gridLocation = indexLocation
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
 
@@ -437,7 +461,7 @@ class RoomCell: SKSpriteNode {
 
 // 10 x 8 collection of sprites that make up a room
 class Room: SKNode {
-    var pathDirection: [PathDirection] = [.unknown] // [.left, .right, .top]
+    var pathDirection: [PathDirection] = [.unknown]
     var gridLocation: MatrixIndex = (0, 0)
     var roomType: RoomType = .sideRoom
     var entranceCell: RoomCell? {
@@ -452,11 +476,10 @@ class Room: SKNode {
             for y in 0..<roomGridSize.y {
                 nodes[x][y] = RoomCell()
                 nodes[x][y].gridLocation = (x: x, y: y)
-                nodes[x][y].color = randomRPG()
+      //          nodes[x][y].color = randomRPG()
             }
         }
         
-        count += 1
         return nodes
     }()
     
@@ -469,11 +492,6 @@ class Room: SKNode {
     
     override init() {
         super.init()
-        for cols in roomLayoutNodes {
-            for node in cols {
-                addChild(node)
-            }
-        }
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -488,6 +506,16 @@ class Room: SKNode {
                 }
             }
         }
+        
+        for cols in roomLayoutNodes {
+            for layoutNode in cols {
+                if let layoutNode = layoutNode.nodes{
+                    for skNode in layoutNode {
+                        addChild(skNode)
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -496,7 +524,7 @@ class Room: SKNode {
 class RoomPath {
     var rooms: [[Room]]
     
-    init(rooms: [[Room ]]) {
+    init(rooms: [[Room]]) {
         self.rooms = rooms
     }
     
@@ -599,9 +627,5 @@ class RoomPath {
                 }
             }
         }
-//
-//        for room in path {
-//            print("l: \(room.gridLocation) d: \(room.pathDirection) t: \(room.roomType)")
-//        }
     }
 }
