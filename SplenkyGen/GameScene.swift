@@ -1,4 +1,4 @@
-//
+ //
 //  GameScene.swift
 //  SplenkyGen
 //
@@ -12,6 +12,9 @@ import GameplayKit
 let levelGridSize: (x: Int, y: Int) = (4, 4)
 let spriteSize = CGSize(width: 32, height: 32)
 let roomGridSize: (x: Int, y: Int) = (10, 8)
+private let probSnakePit = 8
+// TODO: remove, was quick and dirty logic to get things moving
+var tempGlobalRooms: [[Room]]!
 
 extension RoomCell {
     var pointInRoom: CGPoint {
@@ -35,11 +38,6 @@ struct CollisionType {
     static let character: UInt32 = 0x1 << 2
 }
 
-// TODO: remove, was quick and dirty logic to get things moving
-var tempGlobalRooms: [[Room]]!
-
-private let probSnakePit = 8
-
 class Level {
     enum LevelType {
         case mines
@@ -48,6 +46,7 @@ class Level {
         case temple
     }
     
+    // TODO: move portions level generation to LevelType.
     var levelType = LevelType.mines
     lazy var rooms: [[Room]] = {
         var rooms = dim(levelGridSize.x, dim(levelGridSize.y, Room()))
@@ -65,7 +64,6 @@ class Level {
         roomPath.generatePath()
         
         // check for pit
-        // TODO: move LevelType logic
         if self.levelType == .mines && randomInt(min: 1, max: probSnakePit) == 1 {
             func createPit() {
                 for y in 0..<2 {
@@ -133,19 +131,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let camera = SKCameraNode().build {
             $0.xScale = 1//0.4
             $0.yScale = 1//0.4
-            let startRoom = level.startRoom
             
-            if let entrance = startRoom.entranceCell {
-                $0.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height))
-            } else {
-                assert(false)
-            }
+            $0.position = CGPoint(x: frame.midX, y: frame.midY)
+            
+//            let startRoom = level.startRoom
+            
+//            if let entrance = startRoom.entranceCell {
+//                $0.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height))
+//            } else {
+//                assert(false)
+//            }
         }
         
         player = Player()
-        player.position = camera.position
+        let startRoom = level.startRoom
+
+        if let entrance = startRoom.entranceCell {
+            player.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height))
+        } else {
+            assert(false)
+        }
+        
         player.zPosition = 3
-        addChild(player)
+      //  addChild(player)
         
         self.camera = camera
         addChild(camera)
@@ -189,10 +197,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             case up = 126
         }
         
-        guard !event.isARepeat else { return }
+        guard let key = Key(rawValue: event.keyCode), !event.isARepeat else { return }
         
         let offset: CGFloat = 4
-        let key = Key(rawValue: event.keyCode)!
         
         switch key {
         case .left:
@@ -234,7 +241,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    
     override func update(_ currentTime: TimeInterval) {
         // execute any key/touch/mouse events
         for keyState in keyStates {
@@ -243,6 +249,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        self.camera?.position = self.player.position
+     //   self.camera?.position = self.player.position
     }
 }

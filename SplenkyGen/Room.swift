@@ -321,7 +321,7 @@ enum RoomType {
 }
 
 // MARK: -
-
+// TODO: SGSprite needs a little more refining. This covers mines, but what about jungle etc.
 enum SGSprite {
     case caveBackground
     case block
@@ -460,6 +460,7 @@ class RoomCell  {
 // MARK: -
 
 // 10 x 8 collection of sprites that make up a room
+// TODO: what kind of room? mine, jungle? That's where the code is actually going to get interesting.
 class Room: SKNode {
     var pathDirection: [PathDirection] = [.unknown]
     var gridLocation: MatrixIndex = (0, 0)
@@ -476,7 +477,6 @@ class Room: SKNode {
             for y in 0..<roomGridSize.y {
                 nodes[x][y] = RoomCell()
                 nodes[x][y].gridLocation = (x: x, y: y)
-      //          nodes[x][y].color = randomRPG()
             }
         }
         
