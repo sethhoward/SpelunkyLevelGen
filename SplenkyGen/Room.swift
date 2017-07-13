@@ -91,7 +91,7 @@ fileprivate extension RoomTemplate {
     
     mutating func placeObstacle() {
         print("b: \(self)")
-        var tempString = String(self)! // observed
+        var tempString = String(self) // observed
         for i in 0..<self.count {
             if let tileValue = Int(String(tempString.characters.popFirst()!)), let tile = TileType(rawValue: tileValue) {
                     var j = i
