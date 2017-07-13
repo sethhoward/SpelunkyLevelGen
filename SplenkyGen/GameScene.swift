@@ -22,7 +22,6 @@ extension RoomCell {
     }
 }
 
-
 extension Room {
     var locationInParent: CGPoint {
         return CGPoint(x: CGFloat(gridLocation.x) * roomSize.width, y: CGFloat(gridLocation.y * roomSize.rows))
@@ -101,7 +100,6 @@ class Player: SKSpriteNode {
     init() {
         super.init(texture: SKTexture(imageNamed: "charStandLeft.png"), color: .clear, size:CGSize(width: 32, height: 32))
         let physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 20, height: 28))
-      //  physicsBody.pinned = true
         physicsBody.allowsRotation = false
         physicsBody.categoryBitMask = CollisionType.character
         physicsBody.contactTestBitMask = CollisionType.brick
@@ -163,30 +161,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func didBegin(_ contact: SKPhysicsContact) {
         print("collision: \(contact.bodyA) :: \(contact.bodyB)")
-    }
-    
-    func touchDown(atPoint pos : CGPoint) {
-
-    }
-    
-    func touchMoved(toPoint pos : CGPoint) {
-
-    }
-    
-    func touchUp(atPoint pos : CGPoint) {
-
-    }
-    
-    override func mouseDown(with event: NSEvent) {
-
-    }
-    
-    override func mouseDragged(with event: NSEvent) {
-
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-
     }
     
     override func keyDown(with event: NSEvent) {
