@@ -17,6 +17,7 @@
 		C52C7A0D1EECA016008803CC /* Entrance.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C7A0C1EECA016008803CC /* Entrance.png */; };
 		C52C7A0F1EECC1A8008803CC /* Exit.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C7A0E1EECC1A8008803CC /* Exit.png */; };
 		C52C7A111EECC228008803CC /* Spikes.png in Resources */ = {isa = PBXBuildFile; fileRef = C52C7A101EECC228008803CC /* Spikes.png */; };
+		C569C85B21777C230025CDF8 /* Sprite.swift in Sources */ = {isa = PBXBuildFile; fileRef = C569C85A21777C230025CDF8 /* Sprite.swift */; };
 		C5FE871B1EE4A4C20054982C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FE871A1EE4A4C20054982C /* AppDelegate.swift */; };
 		C5FE87211EE4A4C20054982C /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FE87201EE4A4C20054982C /* GameScene.swift */; };
 		C5FE87231EE4A4C20054982C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5FE87221EE4A4C20054982C /* ViewController.swift */; };
@@ -36,6 +37,7 @@
 		C52C7A0C1EECA016008803CC /* Entrance.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Entrance.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Blocks/Background/sEntrance.images/Entrance.png"; sourceTree = "<group>"; };
 		C52C7A0E1EECC1A8008803CC /* Exit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Exit.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Blocks/Background/sExit.images/Exit.png"; sourceTree = "<group>"; };
 		C52C7A101EECC228008803CC /* Spikes.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Spikes.png; path = "../../../../../SpelunkyCommunityUpdateProject-master/spelunky/Sprites/Traps/sSpikes.images/Spikes.png"; sourceTree = "<group>"; };
+		C569C85A21777C230025CDF8 /* Sprite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sprite.swift; sourceTree = "<group>"; };
 		C5FE87171EE4A4C20054982C /* SplenkyGen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SplenkyGen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5FE871A1EE4A4C20054982C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C5FE87201EE4A4C20054982C /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
@@ -64,6 +66,7 @@
 				C52C7A021EEB54F1008803CC /* Ladders */,
 				C52C79F51EEB5402008803CC /* Background */,
 				C52C79F41EEB53FC008803CC /* Mines */,
+				C569C85A21777C230025CDF8 /* Sprite.swift */,
 			);
 			path = Assets;
 			sourceTree = "<group>";
@@ -222,6 +225,7 @@
 				C5FE87211EE4A4C20054982C /* GameScene.swift in Sources */,
 				C52C7A091EEC8ADB008803CC /* Room.swift in Sources */,
 				C52C7A0B1EEC8B30008803CC /* Helpers.swift in Sources */,
+				C569C85B21777C230025CDF8 /* Sprite.swift in Sources */,
 				C5FE871B1EE4A4C20054982C /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
