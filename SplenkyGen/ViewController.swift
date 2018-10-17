@@ -21,8 +21,8 @@ class ViewController: NSViewController {
         
         if let view = self.skView {
             let scene = GameScene().build {
-                $0.scaleMode = .resizeFill
-                $0.size = skView.bounds.size
+                $0.scaleMode = .aspectFit
+                $0.size = view.bounds.size
             }
             
             view.presentScene(scene)

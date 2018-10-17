@@ -23,6 +23,7 @@ enum PathDirection {
 
 typealias RoomTemplate = String
 
+// extension for creating obstacles.
 fileprivate extension RoomTemplate {
     private enum TileType: Int {
         case start = 8
@@ -83,14 +84,12 @@ fileprivate extension RoomTemplate {
                 }
             }
             
-            print("\(strObs1), \(strObs2), \(strObs3)")
-            
             return (strObs1, strObs2, strObs3)
         }
     }
     
+    // replace the obstacle placeholder with one from above.
     mutating func placeObstacle() {
-        print("b: \(self)")
         var tempString = String(self) // observed
         for i in 0..<self.count {
             if let tileValue = Int(String(tempString.characters.popFirst()!)), let tile = TileType(rawValue: tileValue) {
@@ -110,16 +109,15 @@ fileprivate extension RoomTemplate {
                     substituteObstacle(at: j, with: obstacles.obs3)
             }
         }
-        
-        print("a: \(self)")
-       // return template
     }
 }
 
 // TODO: too many pits.. not checking end start for pit creation
+// RoomTypes provide a suggested template for layout. Certains rooms like 'path' guarantee to have a left exit and a right exit. While a side room will only left/right and bottom. Certain numbers in the template are not optional while others allow for a randomly generated sprite/obstacle.
+// 0 = air, 1 = 100% solid block, L = Ladder, P = Platform for the ladder, 4 = probalistic tile (%25 chance of a push block). 5/6 = obstacle block generated using RoomTemplate().obstacles.
 enum RoomType {
-    case sideRoom
-    case path // also known as 'main room'
+    case sideRoom // not part of the path and may not contain enters/exits (walled off).
+    case path // also known as 'main room'. We will generate these after created a start room.
     case start
     case end
     case pitTop
@@ -320,8 +318,9 @@ enum RoomType {
     }
 }
 
-// MARK: -
+// MARK: - SGSprite
 // TODO: SGSprite needs a little more refining. This covers mines, but what about jungle etc.
+// Sprite information for rendering.
 enum SGSprite {
     case caveBackground
     case block
@@ -338,21 +337,23 @@ enum SGSprite {
         
         switch self {
         case .brick:
-            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "sBrick.png"), color: .clear, size: spriteSize)//SKSpriteNode(texture: SKTexture(imageNamed: "sBrick.png"))
-            sprite.name = "brick"
-            let physicsBody = SKPhysicsBody(rectangleOf: spriteSize)
-            physicsBody.categoryBitMask = CollisionType.brick
-            physicsBody.contactTestBitMask = CollisionType.character
-            physicsBody.pinned = true
-            physicsBody.allowsRotation = false
-            sprite.physicsBody = physicsBody
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "sBrick.png"), color: .clear, size: spriteSize).build {
+                $0.name = "brick"
+                $0.physicsBody = SKPhysicsBody(rectangleOf: spriteSize).build {
+                    $0.categoryBitMask = CollisionType.brick
+                    $0.contactTestBitMask = CollisionType.character
+                    $0.pinned = true
+                    $0.allowsRotation = false
+                }
+            }
+            
             sprites.append(sprite)
         case .block:
             let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "sBlock.png"), color: .clear, size: spriteSize)
             sprite.name = "block"
             sprites.append(sprite)
         case .pushBlock:
-            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "PushBlock.png"), color: .clear, size: spriteSize)
+            let sprite = SKSpriteNode(texture: SKTexture(imageNamed: "sBlock.png"), color: .clear, size: spriteSize)
             sprite.name = "pushBlock"
             sprites.append(sprite)
         case .entrance:
@@ -386,6 +387,7 @@ enum SGSprite {
         return sprites
     }
     
+    // Based off of the room type and a randomly generated number we'll assign a cooresponding texture.
     init?(character: Character, roomType: RoomType) {
         switch character {
         case "1" where randomInt(min: 1, max: 10) == 1:
@@ -424,7 +426,11 @@ enum SGSprite {
     }
 }
 
+// MARK: - RoomCell
+
+// Maintains the sprites and location information for a sprite in a room.
 class RoomCell  {
+    // Hang on to several for layering.
     var nodes: [SKSpriteNode]? /// = SKSpriteNode(texture: nil, color: .clear, size: spriteSize)
     var sprite: SGSprite? {
         didSet {
@@ -457,19 +463,21 @@ class RoomCell  {
     }
 }
 
-// MARK: -
+// MARK: - Room
 
-// 10 x 8 collection of sprites that make up a room
 // TODO: what kind of room? mine, jungle? That's where the code is actually going to get interesting.
+// 10 x 8 collection of sprites that make up a room
 class Room: SKNode {
     var pathDirection: [PathDirection] = [.unknown]
     var gridLocation: MatrixIndex = (0, 0)
     var roomType: RoomType = .sideRoom
+    // getter back to the entrance.
     var entranceCell: RoomCell? {
         guard roomType == .start else { return nil }
         return ((roomLayoutNodes.flatMap { $0 }).filter { $0.sprite == .entrance }).first
     }
     
+    // initially generate an empty array of cells.
     private lazy var roomLayoutNodes: [[RoomCell]] = {
         var nodes = dim(roomGridSize.x, dim(roomGridSize.y, RoomCell()))
         
@@ -486,7 +494,7 @@ class Room: SKNode {
     var indexPosition: MatrixIndex! {
         didSet {
             gridLocation = (x: indexPosition.x, y: indexPosition.y)
-            position = CGPoint(x: (CGFloat(roomGridSize.x) * spriteSize.width) * CGFloat(indexPosition.x), y: (CGFloat(roomGridSize.y) * spriteSize.height) * (3 - CGFloat(indexPosition.y)))
+            position = CGPoint(x: (CGFloat(roomGridSize.x) * spriteSize.width) * CGFloat(indexPosition.x) + 16, y: (CGFloat(roomGridSize.y) * spriteSize.height) * (3 - CGFloat(indexPosition.y)) - 52)
         }
     }
     
@@ -498,6 +506,7 @@ class Room: SKNode {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // Grab a template (based off of the type of room) and populate the sprites with the correct textures and add the sprite to the scene.
     func generateRoom() {
         if var template = roomType.template(room: self) {
             for y in 0..<roomGridSize.y {
@@ -521,6 +530,7 @@ class Room: SKNode {
 
 // MARK: - RoomPath
 
+// Generate rooms only in the solution path. Once we have a path from the enterance to the exit we will later fill in the missing rooms in the gaps. These missing rooms are not guaranteed to have exits on any sides (may be walled off).
 class RoomPath {
     var rooms: [[Room]]
     
@@ -530,6 +540,8 @@ class RoomPath {
     
     func generatePath() {
         var path = [Room]()
+        
+        // First thing is to place a starting room on the top row.
         let startRoom: Room = {
             var room: Room {
                 let randomX = randomInt(min: 0, max: 3)
@@ -539,10 +551,11 @@ class RoomPath {
             return room
         }()
         
-        var currentRoom: Room = startRoom
+        var currentRoom = startRoom
         path.append(startRoom)
         
         pathLoop: while true {
+            // Based on our location in the 4 x 4 grid we will generate a room that goes in a certain directions.
             var randomNumber: Int {
                 switch currentRoom.gridLocation.x {
                 case 0:
@@ -572,6 +585,7 @@ class RoomPath {
             
             // mutating currentRoom
             var downPath: Room? {
+                // if we've reached the bottom row and attempt to go lower... mark it as the end.
                 guard let downRoom = rooms.neighbor(of: currentRoom, thatIs: .drop) else {
                     currentRoom.roomType = .end
                     return nil

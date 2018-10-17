@@ -1,28 +1,33 @@
- //
+//
 //  GameScene.swift
 //  SplenkyGen
 //
 //  Created by Seth Howard on 6/4/17.
 //  Copyright © 2017 Seth Howard. All rights reserved.
 //
+ 
+// Every thing in one place to get things moving.
 
 import SpriteKit
 import GameplayKit
 
+// MARK: - Scene dimensions
 let levelGridSize: (x: Int, y: Int) = (4, 4)
 let spriteSize = CGSize(width: 32, height: 32)
 let roomGridSize: (x: Int, y: Int) = (10, 8)
+
+/// The probability that we generate a snake pit in the level
 private let probSnakePit = 8
-// TODO: remove, was quick and dirty logic to get things moving
+// TODO: remove, was quick and dirty logic to get things moving. It used by an enum and could be better handled as a data type.
 var tempGlobalRooms: [[Room]]!
 
-extension RoomCell {
+private extension RoomCell {
     var pointInRoom: CGPoint {
         return CGPoint(x: CGFloat(gridLocation.x) * spriteSize.width, y: CGFloat(gridLocation.y) * spriteSize.height)
     }
 }
 
-extension Room {
+private extension Room {
     var locationInParent: CGPoint {
         return CGPoint(x: CGFloat(gridLocation.x) * roomSize.width, y: CGFloat(gridLocation.y * roomSize.rows))
     }
@@ -37,7 +42,10 @@ struct CollisionType {
     static let character: UInt32 = 0x1 << 2
 }
 
-class Level {
+// MARK: - Level
+
+/// A level consists of 16 rooms a 4 x 4 grid. Each room holds 10 x 8 sprites (walls, ladders, floors...). A path is built from the start room to the exit. Each room as a set layout with a bit of random procedurally generated flavor so they don't all look the same see @enum RoomType.
+final class Level {
     enum LevelType {
         case mines
         case jungle
@@ -45,8 +53,9 @@ class Level {
         case temple
     }
     
-    // TODO: move portions level generation to LevelType.
+    // TODO: move portions level generation to LevelType
     var levelType = LevelType.mines
+    // generate the layout for this level.
     lazy var rooms: [[Room]] = {
         var rooms = dim(levelGridSize.x, dim(levelGridSize.y, Room()))
         
@@ -62,7 +71,7 @@ class Level {
         var roomPath = RoomPath(rooms: rooms)
         roomPath.generatePath()
         
-        // check for pit
+        // check for pit. Based on a probability 'roll' and position of rooms. Requires 3 rooms stacked ontop of each other that are not in the path.
         if self.levelType == .mines && randomInt(min: 1, max: probSnakePit) == 1 {
             func createPit() {
                 for y in 0..<2 {
@@ -96,6 +105,8 @@ class Level {
     }()
 }
 
+// MARK: - Player
+
 class Player: SKSpriteNode {
     init() {
         super.init(texture: SKTexture(imageNamed: "charStandLeft.png"), color: .clear, size:CGSize(width: 32, height: 32))
@@ -111,52 +122,48 @@ class Player: SKSpriteNode {
     }
 }
 
-// scene consists of 4 x 4 grid of rooms
+// MARK: - GameScene
+
+/// scene consists of 4 x 4 grid of rooms
 class GameScene: SKScene, SKPhysicsContactDelegate {
-    let level = Level()
-    var player: Player!
+    private var level = Level()
+    private let player = Player()
     
-    enum KeyState {
+    private enum KeyState {
         case unknown
         case active(keyCode: UInt16, action: () -> Void)
     }
     
-    var keyStates: [KeyState] = [KeyState]()
+    private var keyStates: [KeyState] = [KeyState]()
     
     override func didMove(to view: SKView) {
+        load()
+
+        physicsWorld.contactDelegate = self
+    }
+    
+    private func load() {
         (level.rooms.flatMap { $0 }).forEach { addChild($0) }
+        
+        let startRoom = level.startRoom
+        
+        if let entrance = startRoom.entranceCell {
+            player.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height))
+        } else {
+            fatalError()
+        }
         
         let camera = SKCameraNode().build {
             $0.xScale = 1//0.4
             $0.yScale = 1//0.4
-            
             $0.position = CGPoint(x: frame.midX, y: frame.midY)
-            
-//            let startRoom = level.startRoom
-            
-//            if let entrance = startRoom.entranceCell {
-//                $0.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height))
-//            } else {
-//                assert(false)
-//            }
         }
-        
-        player = Player()
-        let startRoom = level.startRoom
-
-        if let entrance = startRoom.entranceCell {
-            player.position = CGPoint(x: startRoom.locationInParent.x + entrance.pointInRoom.x, y: frame.size.height - (startRoom.locationInParent.y + entrance.pointInRoom.y - spriteSize.height))
-        } else {
-            assert(false)
-        }
-        
-        player.zPosition = 3
-      //  addChild(player)
         
         self.camera = camera
         addChild(camera)
-        
-        physicsWorld.contactDelegate = self
+        // Uncomment to place the player
+        // player.zPosition = 3
+        //  addChild(player)
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
@@ -169,6 +176,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             case right = 124
             case down = 125
             case up = 126
+            case reload = 15
         }
         
         guard let key = Key(rawValue: event.keyCode), !event.isARepeat else { return }
@@ -196,6 +204,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 self.camera?.position = CGPoint(x: self.camera!.position.x, y: self.camera!.position.y - offset)
                 self.player.position = self.camera!.position
             })
+        case .reload:
+            (level.rooms.flatMap { $0 }).forEach { _ in removeAllChildren() }
+            level = Level()
+            load()
         }
     }
     
@@ -222,7 +234,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 event()
             }
         }
-        
+        // Uncomment to have the camera follow the player. May need to zoom the camera in a bit.
      //   self.camera?.position = self.player.position
     }
 }
